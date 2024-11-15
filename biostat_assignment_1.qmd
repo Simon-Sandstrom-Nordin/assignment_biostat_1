@@ -5,13 +5,12 @@ format: pdf
 editor: visual
 ---
 
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
 ```{r}
 # Install the required package
 # install.packages("readr")
+# install.packages("ggplot2")
+# install.packages("dplyr")
+
 # Load the installed Package
 library(readr)
 library(ggplot2)
@@ -127,7 +126,6 @@ summary_data <- summary_data %>%
 ```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 # Plot incidence rate over time with smoother (separately for males and females)
 ggplot(summary_data, aes(x = year, y = incidence_rate, color = sex)) +
-  # geom_line(size = 1) +  # Line for each sex
   geom_point(size = 1) +  # Points for visibility
   geom_smooth(method = "loess", span = 0.2, se = FALSE, linetype = "solid") +  # Smoothing with LOESS
   scale_color_manual(values = c("Male" = "blue", "Female" = "red")) +
@@ -144,7 +142,6 @@ ggplot(summary_data, aes(x = year, y = incidence_rate, color = sex)) +
 ```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 # Plot incidence rates over time by sex and age group with smoothed lines
 ggplot(merged_data, aes(x = year, y = incidence_rate, color = agegroup, group = agegroup)) +
-  # geom_line(size = .5) +  # Line for each age group
   geom_point(size = .8) +  # Points for visibility
   geom_smooth(method = "loess", span = 0.2, se = FALSE, linetype = "solid") +  # Smoothing with LOESS
   facet_wrap(~sex) +  # Separate plots for males and females
@@ -156,10 +153,9 @@ ggplot(merged_data, aes(x = year, y = incidence_rate, color = agegroup, group = 
     color = "Age Group"
   ) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + # Adjust x-axis labels for readability
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),  # Adjust x-axis labels for readability
-    # legend.position = "bottom",  # Move the legend to the bottom
+    axis.text.x = element_text(angle = 45, hjust = 1),
     legend.key.size = unit(.2, "cm"),  # Reduce size of legend keys (symbols)
     legend.text = element_text(size = 10),  # Reduce size of legend text
     legend.title = element_text(size = 10)  # Adjust size of legend title
