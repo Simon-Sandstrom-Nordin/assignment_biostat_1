@@ -1,0 +1,526 @@
+---
+title: "Assignment 1"
+authors: "Group 1"
+output: html_document
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+```{r libraries}
+library(readr)
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r load data}
+cases <- readr::read_tsv("cases.tsv")
+population <- readr::read_tsv("population.tsv")
+```
+
+```{r explore data}
+cases %>% summary()
+# order agegroups 
+factor_groups <- cases %>% pull(agegroup) %>% unique()
+cases <- cases %>% mutate(agegroup = factor(agegroup, levels = factor_groups)) 
+```
+
+Dataset cases contains the yearly number of cancer cases (variable "n") by age group (variable "agegroup") and sex (variable "sex"), with variable "year" ranging from 1970 to 2022. Eighteen different age groups are defined, as:
+
+```{r agegroup}
+cases %>% pull(agegroup) %>% unique()
+```
+
+Two sex groups are defined, as:
+```{r sex}
+cases %>% pull(sex) %>% unique()
+```
+
+## Question 1: plot showing number of cases by age group and sex
+
+```{r age plot}
+cases %>% 
+  group_by(agegroup,sex) %>% 
+  summarize(n = sum(n)) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = agegroup, y = n, fill = sex)) +
+  geom_bar(stat = "identity", position=position_dodge()) +
+  scale_fill_manual(values=c("#FF7074", 
+                             "gray"))+
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  # add labels and title
+  ggtitle("Number of cases by age group and sex, years 1970-2022") +
+  xlab("Age group") + ylab("Number of cases")
+  
+```
+
+
+The plot shows that:\\
+* both for females and males separately, the total number of cases registered between 1970 and 2022 increases with age, reaches a peak at age group 75-79 and then decreases with age. \\
+
+* more comment about f,m?
+
+## Question 2: total number of cases in each calendar year by males and females.
+
+<!-- # ```{r yearly plot} -->
+<!-- # cases %>%  -->
+<!-- #   group_by(year,sex) %>%  -->
+<!-- #   summarize(n = sum(n)) %>%  -->
+<!-- #   ungroup() %>%  -->
+<!-- #   ggplot(aes(x = year, y = n, fill = sex)) + -->
+<!-- #   geom_bar(stat = "identity", position=position_dodge()) + -->
+<!-- #   scale_fill_manual(values=c("#FF7074",  -->
+<!-- #                             "gray"))+ -->
+<!-- #   theme_classic() +  -->
+<!-- #   coord_cartesian(expand = FALSE) +  -->
+<!-- #   # add labels and title -->
+<!-- #   ggtitle("Number of cases by year and sex") + -->
+<!-- #   xlab("Year") + ylab("Number of cases") -->
+<!-- # ```   -->
+
+
+```{r yearly plot 2}
+cases %>% 
+  group_by(year, sex) %>% 
+  summarize(n = sum(n)) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = year, y = n)) +
+  facet_wrap(~sex, ncol = 1) +
+  stat_summary(geom="line") +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4)))+
+  # add labels and title
+  ggtitle("Number of cases by year and sex") +
+  xlab("Year") + ylab("Number of cases")
+```
+
+The graphs show an increasing trend in the yearly number of cases, both for females and males.
+
+By overlapping the curves
+
+```{r yearly plot 3}
+cases %>% 
+  group_by(year,sex) %>% 
+  summarize(n = sum(n)) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = year, y = n, col = sex)) +
+  #geom_point() +
+  stat_summary(geom="line")+
+  scale_color_manual(values=c("#FF7074", 
+                            "gray"))+
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4)))+
+  # add labels and title
+  ggtitle("Number of cases by year and sex") +
+  xlab("Year") + ylab("Number of cases")
+```
+
+One can see that the total yearly number of reported cancer cases tends to be lower for males than for females.
+
+#### Relative difference
+
+```{r max percent difference}
+# quantify the relative differences (%) between total counts for female and male categories
+relative_diff <- cases %>% 
+  group_by(year,sex) %>% 
+  summarize(n = sum(n)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = sex, values_from = n) %>% 
+  mutate(relative_diff = round(100* (Female - Male)/((Male + Female)/2), 2)) %>% 
+  pull(relative_diff)
+plot(x = c(1970:2022), y = relative_diff)
+```
+
+
+The relative difference appear to become smaller in time.
+
+
+
+# Question 3: population, and plot of population size over age groups and calendar year simultaneously, separately by males and females.
+
+### Dataset
+
+```{r population}
+head(population)
+summary(population)
+population %>% pull(agegroup) %>% unique() == cases %>% pull(agegroup) %>% unique() 
+population %>% arrange(desc(year)) %>% pull(year) %>% unique() == cases %>% pull(year) %>% unique() 
+population %>% arrange(sex) %>% pull(sex) %>% unique() == cases %>% arrange(sex) %>% pull(sex) %>% unique()
+```
+Dataset population includes the same age groups and calendar years as dataset cases.
+
+```{r dataset population, categories}
+population <- population %>%  mutate(agegroup = factor(agegroup, levels = factor_groups)) 
+```
+
+### Plot, attempt 1
+
+```{r population, plot 1}
+population %>% 
+  ggplot(aes(x = year, y = n_pop, fill = agegroup)) +
+  facet_wrap(~sex, ncol = 1) +
+  geom_bar(stat = "identity") +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  # add labels and title
+  ggtitle("Overview of swedish population by year, age group and sex") +
+  xlab("Year") + ylab("Population number")
+```
+
+### Plot, attempt 2
+
+```{r population, plot 2, less agegroups}
+population %>%
+  mutate(group = case_when(
+    agegroup %in% factor_groups[1:3] ~ "0-14",
+    agegroup %in% factor_groups[4:6] ~ "15-29",
+    agegroup %in% factor_groups[7:9] ~ "30-44",
+    agegroup %in% factor_groups[10:12] ~ "45-59",
+    agegroup %in% factor_groups[13:15] ~ "60-74",
+    agegroup %in% factor_groups[16:18] ~ "75-89",
+    TRUE ~ NA
+    )
+    ) %>%
+  ggplot(aes(x = year, y = n_pop, fill = group)) +
+  facet_wrap(~sex, ncol = 2) +
+  geom_bar(stat = "identity") +
+  theme_classic() +
+  coord_cartesian(expand = FALSE) +
+  # add labels and title
+  ggtitle("Overview of swedish population by year, age group and sex") +
+  xlab("Year") + ylab("Population number")
+```
+
+#### Not needed
+
+```{r population, plot 2b proportion, less agegroups}
+population %>%
+  mutate(group = case_when(
+    agegroup %in% factor_groups[1:3] ~ "0-14",
+    agegroup %in% factor_groups[4:6] ~ "15-29",
+    agegroup %in% factor_groups[7:9] ~ "30-44",
+    agegroup %in% factor_groups[10:12] ~ "45-59",
+    agegroup %in% factor_groups[13:15] ~ "60-74",
+    agegroup %in% factor_groups[16:18] ~ "75-89",
+    TRUE ~ NA
+    )
+    ) %>%
+  ggplot(aes(x = year, y = n_pop, fill = group)) +
+  facet_wrap(~sex, ncol = 2) +
+  geom_bar(position="fill", stat="identity") +
+  theme_classic() +
+  coord_cartesian(expand = FALSE) +
+  # add labels and title
+  ggtitle("Proportion of swedish population by age group.") +
+  xlab("Year") + ylab("Population number")
+```
+
+### Plot, attempt 3
+
+```{r population, plot 3}
+population %>%
+  mutate(group = case_when(
+    agegroup %in% factor_groups[1:3] ~ "0-14",
+    agegroup %in% factor_groups[4:6] ~ "15-29",
+    agegroup %in% factor_groups[7:9] ~ "30-44",
+    agegroup %in% factor_groups[10:12] ~ "45-59",
+    agegroup %in% factor_groups[13:15] ~ "60-74",
+    agegroup %in% factor_groups[16:18] ~ "75-89",
+    TRUE ~ NA
+    )
+    ) %>%
+  ggplot(aes(x = year, y = n_pop, color = sex)) +
+  facet_wrap(~group, ncol = 3) +
+  stat_summary(geom="line")+
+  theme_classic() +
+  coord_cartesian(expand = FALSE) +
+  # add labels and title
+  ggtitle("Overview of swedish population by year, age group and sex") +
+  xlab("Year") + ylab("Population number")
+```
+
+### Plot, attempt 4
+
+```{r population, plot 4, fig.height=10}
+population %>%
+  ggplot(aes(x = year, y = n_pop, color = sex)) +
+  facet_wrap(~agegroup, ncol = 3) +
+  stat_summary(geom="line")+
+  theme_classic() +
+  coord_cartesian(expand = FALSE) +
+  # add labels and title
+  ggtitle("Overview of swedish population by year, age group and sex") +
+  xlab("Year") + ylab("Population number")
+```
+
+### Not needed
+### comparison 1970 - 2022, distribution of sex
+
+```{r 1970 vs 2022, proportion}
+population %>%
+  filter(year %in% c(1970, 2022)) %>% 
+  ggplot(aes(x = agegroup, y = n_pop, fill = sex)) +
+  facet_wrap(~year, ncol = 2) +
+  geom_bar(position="fill", stat="identity") + 
+  theme_classic() +
+  coord_cartesian(expand = FALSE) +
+  # add labels and title
+  ggtitle("Sex distribution by age group, years 1970 and 2022") +
+  xlab("age group") + ylab("Proportion of population")
+```
+
+### Not needed 
+### comparison 1970 - 2022, distribution of sex 
+
+```{r 1970 - 2022, count}
+population %>%
+  filter(year %in% c(1970, 2022)) %>% 
+  ggplot(aes(x = agegroup, y = n_pop, fill = sex)) +
+  facet_wrap(~year, ncol = 2) +
+  geom_bar(stat="identity", position = position_dodge()) + 
+  theme_classic() +
+  coord_cartesian(expand = FALSE) +
+  # add labels and title
+  ggtitle("Sex distribution by age group, years 1970 and 2022") +
+  xlab("age group") + ylab("Proportion of population")
+```
+\\
+
+# Question 4: merged information on number of cases and the number of persons at risk in each year, for each age group and sex. Data frame with the total number of cases and the total population size in each calendar year by males and females.\\
+
+### merged dataframe, with age
+
+```{r merge}
+# merging datasets
+cases_pop <- cases %>% left_join(population) 
+```
+
+```{r check}
+## check
+cases %>% nrow() == cases_pop %>% nrow() 
+population %>% nrow() == cases_pop %>% nrow() 
+
+cases_pop %>% head()
+```
+
+### Two datasets without age. Will be merged in question 5
+
+```{r year and sex}
+# cases by year and sex
+cases_ys <- cases %>% 
+  group_by(year, sex) %>% 
+  summarize(n = sum(n)) %>% 
+  ungroup()
+
+# population by year and sex
+population_ys <- population %>% 
+  group_by(year, sex) %>% 
+  summarize(n_pop = sum(n_pop)) %>% 
+  ungroup()
+```
+
+
+## Question 5: Incidence rate
+
+```{r incidence rate}
+# rate per hundred thousand population, dataset with age
+cases_pop <- cases_pop %>% 
+  # rate per 10^5 population
+  mutate(rate = 10^5 * n/n_pop)
+
+# rate per ten thousand population, dataset without age
+
+# create dataset without age variable
+cases_pop_ys <- cases_ys %>% 
+  left_join(population_ys) %>% 
+    # rate per 10^4 population
+  mutate(rate = 10^4 * n/n_pop)
+```
+
+Interpretation:\\
+Definition of incidence rate: "for a specific follow-up period, the number of new cases of the outcome divided by the total person-time at risk" (Adina Feldman, Lecture 2). In our case, for each period of one year, the number of new cases of cancer in that year, divided by the total person-time (1 year times population in that year). \\
+
+## Question 6: Plot the incidence rate of colon cancer over calendar time and apply a smoother, separately by males and females (here you can use the incidence rate based on the total number of cases and the total population size). Describe what you can conclude from the graphs. Create a graph of incidence rates over calendar year by sex and age group, and apply smoothers, what can you conclude
+
+### No age
+
+```{r plot rate, no age}
+cases_pop_ys %>% 
+  #mutate(year = as.factor(year)) %>% 
+  ggplot(aes(x = year, y = rate)) +
+  facet_wrap(~ sex, ncol = 1) +
+  # smooth the curve
+  geom_smooth() +
+  # non smoothed data
+  geom_point(size = 0.5) +
+  stat_summary(geom="line") +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
+  # add labels and title
+  ggtitle("Incidence rate per 10^4 population by year and sex") +
+  xlab("Year") + ylab("Number of cases per 10^4 population")
+```
+
+When I normalize by population size, I see that the incidence rate per ten thousand population 
+shows an increasing trend in time, both for females and for males separately.
+
+#### Females and males together
+
+```{r no age, male and female together}
+cases_pop_ys %>% 
+  ggplot(aes(x = year, y = rate, color = sex)) +
+  # smooth the curve
+  geom_smooth() +
+  # non smoothed data
+  geom_point(size = 0.5) +
+  stat_summary(geom="line") +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  #scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
+  # add labels and title
+  ggtitle("Incidence rate per 10^4 population by year and sex") +
+  xlab("Year") + ylab("Number of cases per 10^4 population")
+```
+
+Yearly count per ten thousand population is lower for males than for females.\\
+
+### Age
+
+#### Plot, attempt 1 and 2
+
+```{r attempt with age, fig.height = 10, fig.width = 9}
+cases_pop %>% 
+  mutate(group = case_when(
+   agegroup %in% factor_groups[1:3] ~ 1,
+   agegroup %in% factor_groups[4:6] ~ 2,
+   agegroup %in% factor_groups[7:9] ~ 3,
+   agegroup %in% factor_groups[10:12] ~ 4,
+   agegroup %in% factor_groups[13:15] ~ 5,
+   agegroup %in% factor_groups[16:18] ~ 6,
+   TRUE ~ NA
+   )
+  ) %>%
+  # mutate(group = case_when(
+  #  agegroup %in% factor_groups[1:6] ~ 1,
+  #  agegroup %in% factor_groups[7:12] ~ 2,
+  #  agegroup %in% factor_groups[13:18] ~ 3,
+  #  TRUE ~ NA
+  #  )
+  # ) %>%
+  # mutate(group = case_when(
+  #  agegroup %in% factor_groups[1:4] ~ 1,
+  #  agegroup %in% factor_groups[5:8] ~ 2,
+  #  agegroup %in% factor_groups[9:12] ~ 3,
+  #  agegroup %in% factor_groups[13:16] ~ 4,
+  #  agegroup %in% factor_groups[17:18] ~ 5,
+  #  TRUE ~ NA
+  #  )
+  # ) %>%
+  ggplot(aes(x = year, y = rate, color = agegroup)) +
+  facet_wrap(group ~ sex, ncol = 4, scales = "free_y") +
+  # smooth the curve
+  geom_smooth() +
+  # non smoothed data
+  geom_point(size = 0.5) +
+  stat_summary(geom="line") +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  #scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
+  # add labels and title
+  ggtitle("Incidence rate per 10^5 population by year, age group and sex") +
+  xlab("Year") + ylab("Number of cases per 10^5 population")
+  
+
+cases_pop %>% 
+  ggplot(aes(x = year, y = rate)) +
+  facet_wrap(agegroup ~ sex, ncol = 6, scales = "free_y") +
+  # non smoothed data 
+  geom_point(size = 0.5, color = "light gray") +
+  stat_summary(geom="line", color = "light gray") +
+  # smooth the curve
+  geom_smooth() +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  #scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
+  # add labels and title
+  ggtitle("Incidence rate per 10^5 population by year, age group and sex") +
+  xlab("Year") + ylab("Number of cases per 10^5 population")
+  
+```
+
+### Plot, attempt 3 (y values constrained)
+
+```{r facet plots for agegroups, females and males on the same plot, y values constrained, fig.width = 9}
+cases_pop %>% 
+  ggplot(aes(x = year, y = rate, color = sex)) +
+  facet_wrap(~ agegroup , ncol = 6) + #, scales = "free_y") +
+  # smooth the curve
+  geom_smooth() +
+  # non smoothed data
+  geom_point(size = 0.5) +
+  stat_summary(geom="line") +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  #scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
+  # add labels and title
+  ggtitle(paste("Yearly number of cases per 10^5 population by sex and age group")) + 
+  xlab("Year") + ylab("Number of cases per 10^5 population") 
+  
+```
+
+### Plot, attempt 3 (y values free)
+
+```{r facet plots for agegroups, females and males on the same plot, y values free, fig.width = 9}
+cases_pop %>% 
+  ggplot(aes(x = year, y = rate, color = sex)) +
+  facet_wrap(~ agegroup , ncol = 6, scales = "free_y") +
+  # smooth the curve
+  geom_smooth() +
+  # non smoothed data
+  geom_point(size = 0.5) +
+  stat_summary(geom="line") +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  #scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
+  # add labels and title
+  ggtitle(paste("Yearly number of cases per 10^5 population by sex and age group")) + 
+  xlab("Year") + ylab("Number of cases per 10^5 population") 
+  
+```
+
+#### Plot, attempt 4
+
+```{r single plots for agegroups}
+for(i in factor_groups){
+  toplot <-  cases_pop %>% 
+    filter(agegroup == i) %>% 
+    ggplot(aes(x = year, y = rate, color = sex)) +
+    # smooth the curve
+    geom_smooth() +
+    # non smoothed data
+    geom_point(size = 0.5) +
+    stat_summary(geom="line") +
+    theme_classic() + 
+    coord_cartesian(expand = FALSE) + 
+    scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
+    # add labels and title
+    ggtitle(paste("Yearly number of cases per 10^5 population by sex, agegroup", i, sep = " ")) +
+    xlab("Year") + ylab("Number of cases per 10^5 population") 
+  
+  print(toplot)
+}
+  
+```
+\\
+* Comparing different ages, trends for age-specific incidence rates are different for different ages.\\
+
+* Comparing females and males, while the crude incidence rate values tend to be higher for females than for males, the age-specific incidence rates have a tendency to be higher for females than for males, when age groups are s.t. age < 55. They tend to be lower for females than for males when age groups are s.t. age => 60 years. 
+\\
+
+See different age structures in population for males and females:\\
+https://www.healthknowledge.org.uk/e-learning/epidemiology/specialists/standardisation
