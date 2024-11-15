@@ -1,0 +1,167 @@
+---
+title: "biostat_assignment_1"
+author: "nomi_mino"
+format: pdf
+editor: visual
+---
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+# Install the required package
+# install.packages("readr")
+# Load the installed Package
+library(readr)
+library(ggplot2)
+library(dplyr)
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+data_cases <- readr::read_tsv("cases.tsv")
+
+# Define the correct order of the age groups
+data_cases$agegroup <- factor(data_cases$agegroup, levels = c("0-4", "5-9", "10-14", "15-19", 
+                                                              "20-24", "25-29", "30-34", "35-39", 
+                                                              "40-44", "45-49", "50-54", "55-59", 
+                                                              "60-64", "65-69", "70-74", "75-79", 
+                                                              "80-84", "85-89"))
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+ggplot(data_cases, aes(x = agegroup, y = sex, fill = n)) +
+  geom_tile() +  # Use a tile plot to visualize the count with color
+  scale_fill_gradient(low = "black", high = "white") +  # Color scale
+  labs(
+    title = "Number of Colon Cancer Cases by Age Group and Sex",
+    x = "Age Group",
+    y = "Sex",
+    fill = "Number of Cases"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+# Summarize total cases by year and sex
+cases_by_year_sex <- data_cases %>%
+  group_by(year, sex) %>%
+  summarize(total_cases = sum(n, na.rm = TRUE), .groups = "drop")
+
+# Create the plot
+ggplot(cases_by_year_sex, aes(x = year, y = total_cases, color = sex, group = sex)) +
+  geom_line(size = 1.2) +  # Add a line for each sex
+  geom_point(size = 3) +   # Add points for visibility
+  scale_color_manual(values = c("Male" = "blue", "Female" = "red")) +
+  labs(
+    title = "Total Number of Colon Cancer Cases by Year and Sex",
+    x = "Year",
+    y = "Total Cases",
+    color = "Sex"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+data_population <- readr::read_tsv("population.tsv")
+data_population$agegroup <- factor(data_population$agegroup, levels = c("0-4", "5-9", "10-14", "15-19", 
+                                                              "20-24", "25-29", "30-34", "35-39", 
+                                                              "40-44", "45-49", "50-54", "55-59", 
+                                                              "60-64", "65-69", "70-74", "75-79", 
+                                                              "80-84", "85-89"))
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+# Summarize total cases by year and sex
+population_by_year_sex <- data_population %>%
+  group_by(year, sex) %>%
+  summarize(total_cases = sum(n, na.rm = TRUE), .groups = "drop")
+
+# Heatmap of population size
+ggplot(data_population, aes(x = agegroup, y = factor(year), fill = n_pop)) +
+  geom_tile() +
+  facet_wrap(~sex) +  # Separate plots for males and females
+  scale_fill_gradient(low = "lightblue", high = "darkblue", name = "Population") +
+  labs(
+    title = "Population Size by Age Group and Year",
+    x = "Age Group",
+    y = "Year"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(size = 6, angle = 45, hjust = 1),  # Smaller x-axis text
+    axis.text.y = element_text(size = 4)                         # Smaller y-axis text
+  )
+
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+# Merge the cases and population data
+merged_data <- data_cases %>%
+  inner_join(data_population, by = c("year", "agegroup", "sex"))
+
+# Summarize the total cases and population size by year and sex
+summary_data <- merged_data %>%
+  group_by(year, sex) %>%
+  summarize(
+    total_cases = sum(n, na.rm = TRUE),
+    total_population = sum(n_pop, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+# Calculate incidence rate for detailed data
+merged_data <- merged_data %>%
+  mutate(incidence_rate = n / n_pop * 100000)  # Rate per 100,000 people
+
+# Calculate incidence rate for summarized data
+summary_data <- summary_data %>%
+  mutate(incidence_rate = total_cases / total_population * 100000)  # Rate per 100,000 people
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+# Plot incidence rate over time with smoother (separately for males and females)
+ggplot(summary_data, aes(x = year, y = incidence_rate, color = sex)) +
+  # geom_line(size = 1) +  # Line for each sex
+  geom_point(size = 1) +  # Points for visibility
+  geom_smooth(method = "loess", span = 0.2, se = FALSE, linetype = "solid") +  # Smoothing with LOESS
+  scale_color_manual(values = c("Male" = "blue", "Female" = "red")) +
+  labs(
+    title = "Colon Cancer Incidence Rate Over Time by Sex",
+    x = "Year",
+    y = "Incidence Rate (per 100,000)",
+    color = "Sex"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+# Plot incidence rates over time by sex and age group with smoothed lines
+ggplot(merged_data, aes(x = year, y = incidence_rate, color = agegroup, group = agegroup)) +
+  # geom_line(size = .5) +  # Line for each age group
+  geom_point(size = .8) +  # Points for visibility
+  geom_smooth(method = "loess", span = 0.2, se = FALSE, linetype = "solid") +  # Smoothing with LOESS
+  facet_wrap(~sex) +  # Separate plots for males and females
+  scale_color_viridis_d(name = "Age Group") +  # Use viridis color scale for age groups
+  labs(
+    title = "Colon Cancer Incidence Rate by Sex and Age Group Over Time",
+    x = "Year",
+    y = "Incidence Rate (per 100,000)",
+    color = "Age Group"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + # Adjust x-axis labels for readability
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Adjust x-axis labels for readability
+    # legend.position = "bottom",  # Move the legend to the bottom
+    legend.key.size = unit(.2, "cm"),  # Reduce size of legend keys (symbols)
+    legend.text = element_text(size = 10),  # Reduce size of legend text
+    legend.title = element_text(size = 10)  # Adjust size of legend title
+  ) 
+```
