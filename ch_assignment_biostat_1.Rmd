@@ -524,3 +524,373 @@ for(i in factor_groups){
 
 See different age structures in population for males and females:\\
 https://www.healthknowledge.org.uk/e-learning/epidemiology/specialists/standardisation
+
+
+
+## Question 7: Poisson model
+
+From: https://rpubs.com/kaz_yos/poisson
+"The outcome of interest here is rates (cases/n), however, glm() can only take counts as outcome for Poisson regression.
+
+By transforming the equation.
+
+\( log(cases / n) = \beta_0 + \sum_i {\beta_i X_i} \)
+
+\( log(cases) - log(n) = \beta_0 + \sum_i {\beta_i X_i} \)
+
+\( log(cases) = log(n) + \beta_0 + \sum_i {\beta_i X_i} \)
+
+Thus, it can be modeled by including a log(n) term with coeffcient of 1 (no \( \beta \) for this term). This is called an offset and, modeled with offset() in R."
+
+
+```{r Poisson}
+model <- cases_pop_ys %>%  
+  glm(formula = n ~ year + sex + offset(log(n_pop)), family = "poisson")
+model
+```
+
+$log(n/n\_pop) = -29.69415 + 0.01094 * year -0.05592 * \delta_f(sex)$
+with $\delta_f(sex = "Female") = 0$, $\delta_f(sex = "Male") = 1$, since sex = "Male" was taken as a reference by the gml() function.\\
+Where do I see the confidence intervals?
+
+## Question 8: 
+
+### 1. Incidence rate in 1970 among males and females
+
+The incidence rates in 1970 are 
+```{r incidence 1970}
+exp(model$coefficients[1] + model$coefficients[2] * 1970 + model$coefficients[3] * 1)
+
+exp(model$coefficients[1] + model$coefficients[2] * 1970 + model$coefficients[3] * 0)
+```
+for males and females respectively.
+
+### 2. Incidence rate in 2020 among males and females
+
+```{r incidence 2020}
+exp(model$coefficients[1] + model$coefficients[2] * 2020 + model$coefficients[3] * 1)
+
+exp(model$coefficients[1] + model$coefficients[2] * 2020 + model$coefficients[3] * 0)
+```
+
+### 3. Assumptions made regarding how the incidence rate changes over calendar years and difference between males and females
+
+* Rates for males and females have the same time dependence, and differ just by a constant term.\\
+
+* Repeat with mixing year*sex
+
+
+
+# Question 9 
+
+
+```{r Poisson age redone}
+model_age <- cases_pop %>% 
+  mutate(agegroup = factor(agegroup, levels = factor_groups)) %>% 
+  glm(formula = n ~ year*sex + year*agegroup + offset(log(n_pop)), family = "poisson")
+
+model_age <- cases_pop %>% 
+  mutate(agegroup = factor(agegroup, levels = factor_groups)) %>% 
+  glm(formula = n ~ year*sex + year*agegroup + agegroup * sex + offset(log(n_pop)), family = "poisson")
+model_age
+```
+
+
+### Incidence rate in 1970 in age group 70-74 among males and females
+
+The incidence rates in 1970 in age group 70-74 among males and females are respectively:
+
+```{r age with rate 1970 redone}
+# males
+exp(
+    #intercept 
+    model_age$coefficients[1] + 
+    #year
+    model_age$coefficients[2] * 1970 + 
+    #sex
+    model_age$coefficients[3] * 1 + 
+    #age 70-74
+    model_age$coefficients[17] + 
+    # year*sex
+    model_age$coefficients[21] * 1970 * 1 + 
+    # year*age 70-74
+    model_age$coefficients[35] * 1970+
+    # sex*age 70-74 
+    model_age$coefficients[52] * 1)
+
+# females
+exp(
+    #intercept 
+    model_age$coefficients[1] + 
+    #year
+    model_age$coefficients[2] * 1970 + 
+    #sex
+    model_age$coefficients[3] * 0 + 
+    #age 70-74
+    model_age$coefficients[17] + 
+    # year*sex
+    model_age$coefficients[21] * 1970 * 0 + 
+    # year*age 70-74
+    model_age$coefficients[35] * 1970 +
+    # sex*age 70-74 
+    model_age$coefficients[52] * 0)
+```
+
+
+
+### Incidence rate in 2020 in age group 70-74 among males and females
+
+The incidence rates in 2020 in age group 70-74 among males and females are respectively:
+```{r age with rate 2020 redone}
+# males
+exp(
+    #intercept 
+    model_age$coefficients[1] + 
+    #year
+    model_age$coefficients[2] * 2020 + 
+    #sex
+    model_age$coefficients[3] * 1 + 
+    #age 70-74
+    model_age$coefficients[17] + 
+    # year*sex
+    model_age$coefficients[21] * 2020 * 1 + 
+    # year*age 70-74
+    model_age$coefficients[35] *2020+
+    # sex*age 70-74 
+    model_age$coefficients[52] * 1)
+
+# females
+exp(
+    #intercept 
+    model_age$coefficients[1] + 
+    #year
+    model_age$coefficients[2] * 2020 + 
+    #sex
+    model_age$coefficients[3] * 0 + 
+    #age 70-74
+    model_age$coefficients[17] + 
+    # year*sex
+    model_age$coefficients[21] * 2020 * 0 + 
+    # year*age 70-74
+    model_age$coefficients[35] * 2020+
+    # sex*age 70-74 
+    model_age$coefficients[52] * 0)
+```
+
+# Question 10: splines
+
+# Question 11: direct age standardised rate
+
+Different years have different age structures:\\
+https://www.healthknowledge.org.uk/e-learning/epidemiology/specialists/standardisation
+\\
+
+```{r standard pop}
+# reference values for male and female population
+standard_pop <- population %>%
+  filter(year == 2022) %>% 
+  rename(ref_pop = n_pop) %>% 
+  select(-year)
+
+# reference value for total male population 
+tot_male <- standard_pop %>% 
+  filter(sex == "Male") %>% 
+  pull(ref_pop) %>% sum()
+
+# reference value for total female population 
+tot_female <- standard_pop %>% 
+  filter(sex == "Female") %>% 
+  pull(ref_pop) %>% sum()
+```
+
+Standardise incidence rates:
+
+```{r standardise dataset}
+
+age_standardised_rates <- cases_pop %>% 
+  select(-rate) %>% 
+  left_join(standard_pop) %>% 
+  # add number of cases obtained if population number was ref_pop
+  mutate(cases_ref_pop = ref_pop * n/n_pop) %>% 
+  # for each year, compute total (sum over agegroups) and divide by total reference population
+  # keep male and female categories 
+  group_by(year, sex) %>% 
+  # sum over agegroups 
+  summarize(sum_ages = sum(cases_ref_pop, na.rm = TRUE)) %>% 
+  mutate(standardised_rate = case_when(sex == "Female" ~ sum_ages/tot_female,
+                                       sex == "Male" ~ sum_ages/tot_male,
+                                       TRUE ~ NA)
+         ) %>% 
+  select(-sum_ages) %>% 
+  # rescale
+  mutate(standardised_rate = 10^4 * standardised_rate)
+```
+
+### plot of age standardised rates
+
+```{r plot age standardised rates}
+age_standardised_rates %>% 
+   ggplot(aes(x = year, y = standardised_rate, color = sex)) +
+  # smooth the curve
+  geom_smooth() +
+  # non smoothed data
+  geom_point(size = 0.5) +
+  stat_summary(geom="line") +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
+  # add labels and title
+  ggtitle("Standardised incidence rate: cases per 10^4 population by year and sex") +
+  xlab("Year") + ylab("Number of cases per 10^4 population - standardised")
+```
+
+
+### comparison with non standardised rates
+
+### Females:
+```{r plot age standardised rates, females}
+cases_pop_ys %>% 
+  filter(sex == "Female") %>% 
+  left_join(age_standardised_rates) %>% 
+  select(year, sex, rate, standardised_rate) %>% 
+  pivot_longer(cols = c(rate, standardised_rate), names_to = "type") %>% 
+  ggplot(aes(x = year, y = value, color = type))+
+  # smooth the curve
+  geom_smooth() +
+  # non smoothed data
+  geom_point(size = 0.5) +
+  stat_summary(geom="line") +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
+  # add labels and title
+  ggtitle("Standardised vs non standarsised incidence rate - female population") +
+  xlab("Year") + ylab("Number of cases per 10^4 population")
+```
+
+
+### Males
+
+```{r plot age standardised rates, males}
+cases_pop_ys %>% 
+  filter(sex == "Male") %>% 
+  left_join(age_standardised_rates) %>% 
+  select(year, sex, rate, standardised_rate) %>% 
+  pivot_longer(cols = c(rate, standardised_rate), names_to = "type") %>% 
+  ggplot(aes(x = year, y = value, color = type))+
+  # smooth the curve
+  geom_smooth() +
+  # non smoothed data
+  geom_point(size = 0.5) +
+  stat_summary(geom="line") +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
+  # add labels and title
+  ggtitle("Standardised vs non standarsised incidence rate - male population") +
+  xlab("Year") + ylab("Number of cases per 10^4 population")
+```
+
+# Question 12: direct age standardised rate on predicted data
+
+<!-- cases_pop$n - model_age$y == 0, so I deduce that model keeps the same order for the dependent variable as the dataset. Therefore, I expect model_age$fitted.values refer to the fitted values computed by the glm, in the same order as model_age$y, i.e in the same order as cases_pop$n. Therefore:\\ -->
+
+```{r fitted data}
+
+cases_pop_fit <- cases_pop %>% 
+  select(-rate, -n) %>% 
+  # replace number of cases with fitted number of cases, which should already be in the right order
+  add_column(n_fit = model_age$fitted.values)
+
+# 
+# ### to remove
+# 
+# cases_pop_fit <- cases_pop %>% 
+#   select(-rate, -n) %>% 
+#   # replace number of cases with fitted number of cases, which should already be in the right order
+#   add_column(n_fit = model_age$fitted.values) %>% 
+#   mutate(check = n_fit/n_pop) %>% 
+#   left_join(standard_pop) %>% 
+#   mutate(check2 = ref_pop * check)
+# 
+# model_age2 <- cases_pop %>%
+#   mutate(agegroup = factor(agegroup, levels = factor_groups)) %>%
+#  # glm(formula = n ~ year + offset(log(n_pop)), family = "poisson")
+#   glm(formula = n ~ age + offset(log(n_pop)), family = "poisson")
+
+
+# cases_pop_fit <- cases_pop %>% 
+#   select(-rate, -n) %>% 
+#   # replace number of cases with fitted number of cases, which should already be in the right order
+#   add_column(n_fit = model_age2$fitted.values) 
+# ### end remove
+
+
+# repeat question 11
+age_standardised_rates_fit <- cases_pop_fit %>% 
+  left_join(standard_pop) %>% 
+  # add number of cases obtained if population number was ref_pop
+  mutate(cases_ref_pop = ref_pop * n_fit/n_pop) %>% 
+  # for each year, compute total (sum over agegroups) and divide by total reference population
+  # keep male and female categories 
+  group_by(year, sex) %>% 
+  # sum over agegroups 
+  summarize(sum_ages = sum(cases_ref_pop, na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  mutate(standardised_rate_fit = case_when(sex == "Female" ~ sum_ages/tot_female,
+                                       sex == "Male" ~ sum_ages/tot_male,
+                                       TRUE ~ NA)
+         ) %>% 
+  select(-sum_ages) %>% 
+  # rescale
+  mutate(standardised_rate_fit = 10^4 * standardised_rate_fit)
+```
+
+Comparison of standardised rates obtained with fitted data, with standardised rates from the orginal dataset.
+
+### Females:
+```{r plot age standardised rates fitted females, fig.width = 9}
+cases_pop_ys %>% 
+  filter(sex == "Female") %>% 
+  left_join(age_standardised_rates) %>% 
+  left_join(age_standardised_rates_fit) %>% 
+  select(year, sex, rate, standardised_rate, standardised_rate_fit) %>% 
+  pivot_longer(cols = c(rate, standardised_rate, standardised_rate_fit), names_to = "type") %>% 
+  #filter(type == "standardised_rate_fit") %>% 
+  ggplot(aes(x = year, y = value, color = type))+
+  # smooth the curve
+  geom_smooth() +
+  # non smoothed data
+  geom_point(size = 0.5) +
+  stat_summary(geom="line") +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
+  # add labels and title
+  ggtitle("Standardised vs non standarsised incidence rate - female population") +
+  xlab("Year") + ylab("Number of cases per 10^4 population")
+```
+
+
+```{r plot age standardised rates fitted males, fig.width=9}
+cases_pop_ys %>% 
+  filter(sex == "Male") %>% 
+  left_join(age_standardised_rates) %>% 
+  left_join(age_standardised_rates_fit) %>% 
+  select(year, sex, rate, standardised_rate, standardised_rate_fit) %>% 
+  pivot_longer(cols = c(rate, standardised_rate, standardised_rate_fit), names_to = "type") %>% 
+  ggplot(aes(x = year, y = value, color = type))+
+  # smooth the curve
+  geom_smooth() +
+  # non smoothed data
+  geom_point(size = 0.5) +
+  stat_summary(geom="line") +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
+  # add labels and title
+  ggtitle("Standardised vs non standarsised incidence rate - male population") +
+  xlab("Year") + ylab("Number of cases per 10^4 population")
+```
+
+
