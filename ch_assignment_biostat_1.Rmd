@@ -708,7 +708,8 @@ splines_to_fit <- cases_pop %>%
   inner_join(age_df)
 
 splines_model <- splines_to_fit %>% 
-  glm(formula = n ~ bs(year,df = 4)*sex + bs(year, df = 4)*age + offset(log(n_pop)), family = "poisson")
+  # I also put splines on age, otherwise the fitted values are far away from original values
+  glm(formula = n ~ bs(year,df = 4)*sex + bs(year, df = 4)*bs(age, df = 4) + offset(log(n_pop)), family = "poisson")
 
 summary(splines_model)
 
@@ -755,7 +756,7 @@ https://www.healthknowledge.org.uk/e-learning/epidemiology/specialists/standardi
 ```{r standard pop}
 # reference values for male and female population
 standard_pop <- population %>%
-  filter(year == 2022) %>% 
+  filter(year == 2022) %>%  
   rename(ref_pop = n_pop) %>% 
   select(-year)
 
