@@ -1,0 +1,303 @@
+# question 1
+library(ggplot2)
+data <- read.table("Downloads/cases.tsv", sep = "\t", header = TRUE)
+data$agegroup <- factor(data$agegroup, levels = c("0-4", "5-9", "10-14", "15-19", 
+                                                              "20-24", "25-29", "30-34", "35-39", 
+                                                              "40-44", "45-49", "50-54", "55-59", 
+                                                              "60-64", "65-69", "70-74", "75-79", 
+                                                              "80-84", "85-89"))
+
+ggplot(data, aes(x = agegroup, y = n, fill = sex)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Colon Cancer Cases by Age Group and Sex",
+       x = "Age Group",
+       y = "Number of Cases") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#question 2
+library(dplyr)
+# Summarize the data
+summary_data <- data %>%
+  group_by(year, sex) %>%
+  summarize(total_cases = sum(n, na.rm = TRUE))
+
+ggplot(summary_data, aes(x = year, y = total_cases, colour  = sex)) +
+  geom_line() +
+  labs(title = "Total Colon Cancer Cases by Year and Sex",
+       x = "Year",
+       y = "Total Cases") +
+  theme_minimal() +
+  facet_wrap(~ sex)
+
+#question 3
+population <- read.table("Downloads/population.tsv", sep = "\t", header = TRUE)
+
+# Compare age groups
+all(unique(data$agegroup) %in% unique(population$agegroup))
+# Compare calendar years
+all(unique(data$year) %in% unique(population$year))
+
+population_summary <- population %>%
+  group_by(agegroup, year, sex) %>%
+  summarize(total_population = sum(n_pop, na.rm = TRUE))
+
+ggplot(population_summary, aes(x = agegroup, y = total_population, fill = year)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ sex) +
+  labs(title = "Population Size by Age Group, Year, and Sex",
+       x = "Age Group",
+       y = "Total Population") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#question 4
+# Merge the datasets
+merged_data <- merge(data, population, by = c("year", "agegroup", "sex"))
+# Summarize the total number of cases and population by year and sex
+summary_data <- merged_data %>%
+  group_by(year, sex) %>%
+  summarize(
+    total_cases = sum(n, na.rm = TRUE),
+    total_population = sum(n_pop, na.rm = TRUE)
+  )
+
+# Check the summarized data
+head(summary_data)
+
+# Plot total population by year and sex
+ggplot(summary_data, aes(x = year, y = total_population, color = sex)) +
+  geom_line() +
+  labs(title = "Total Population by Year and Sex",
+       x = "Year",
+       y = "Total Population") +
+  theme_minimal()
+
+#question 5
+# Add a new variable for incidence rate in the merged data
+new_merged_data <- merged_data %>%
+  mutate(incidence_rate = n / n_pop)
+
+# Check the updated data
+head(new_merged_data)
+
+# Add a new variable for incidence rate in the summarized data
+new_summary_data <- summary_data %>%
+  mutate(incidence_rate = total_cases / total_population)
+
+# Check the updated data
+head(new_summary_data)
+
+#question 6
+# Plot incidence rates over calendar time, with smoothers
+ggplot(new_summary_data, aes(x = year, y = incidence_rate, color = sex)) +
+  geom_point() +  # Points to show individual rates
+  geom_smooth(method = "loess", se = FALSE) +  # Apply a smoother
+  labs(title = "Incidence Rate of Colon Cancer Over Time by Sex",
+       x = "Year",
+       y = "Incidence Rate",
+       color = "Sex") +
+  theme_minimal()
+
+# Plot incidence rates by year, sex, and age group
+ggplot(new_merged_data, aes(x = year, y = incidence_rate, color = agegroup)) +
+  geom_point() +  # Points for each observation
+  geom_smooth(method = "loess", se = FALSE) +  # Apply smoothers
+  facet_wrap(~ sex) +  # Separate plots for each age group
+  labs(title = "Incidence Rate of Colon Cancer by Year, Sex, and Age Group",
+       x = "Year",
+       y = "Incidence Rate",
+       color = "Sex") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#question 7 assume: main effect model the effect of exposure is the same in all levels of another variable
+poisson_model <- glm(
+  total_cases ~ year + sex,
+  offset = log(total_population),
+  family = poisson(link = "log"),
+  data = new_summary_data
+)
+
+
+#question 8
+# Extract model coefficients
+coefficients <- coef(poisson_model)
+intercept <- coefficients["(Intercept)"]
+year_coeff <- coefficients["year"]
+sex_coeff <- coefficients["sexMale"]
+
+# Calculate log incidence rate and incidence rate for 1970 and 2020
+incidence_1970_male <- exp(intercept + year_coeff * 1970 + sex_coeff)
+incidence_1970_female <- exp(intercept + year_coeff * 1970 )
+
+incidence_2020_male <- exp(intercept + year_coeff * 2020 + sex_coeff)
+incidence_2020_female <- exp(intercept + year_coeff * 2020)
+
+# Print results
+incidence_1970_male
+incidence_1970_female
+incidence_2020_male
+incidence_2020_female
+
+#question9
+# Fit a Poisson regression model with interaction terms for flexibility
+poisson_model_age <- glm(
+  n ~ year * sex + year * agegroup + sex * agegroup,
+  offset = log(n_pop),
+  family = poisson(link = "log"),
+  data = new_merged_data  # Ensure merged_data has cases, population, year, sex, and agegroup
+)
+
+# View the summary of the model
+summary(poisson_model_age)
+# Extract model coefficients
+coefficients <- coef(poisson_model_age)
+
+
+# males
+rate_1970_male <- exp(
+  #intercept 
+  coefficients["(Intercept)"] + 
+    #year
+    coefficients["year"] * 1970 + 
+    #male
+    coefficients["sexMale"] * 1 + 
+    #age 70-74
+    coefficients["agegroup70-74"] * 1 + 
+    # year*sex
+    coefficients["year:sexMale"] * 1970 * 1 + 
+    # year*age 70-74
+    coefficients["year:agegroup70-74"] * 1970 * 1 +
+    # sex*age 70-74 
+    coefficients["sexMale:agegroup70-74"] * 1 * 1)
+
+rate_1970_male
+
+rate_1970_female <- exp(
+  #intercept 
+  coefficients["(Intercept)"] + 
+    #year
+    coefficients["year"] * 1970 + 
+    #female
+    coefficients["sexMale"] * 0 + 
+    #age 70-74
+    coefficients["agegroup70-74"] * 1 + 
+    # year*sex
+    coefficients["year:sexMale"] * 1970 * 0 + 
+    # year*age 70-74
+    coefficients["year:agegroup70-74"] * 1970 * 1 +
+    # sex*age 70-74 
+    coefficients["sexMale:agegroup70-74"] * 0 * 1)
+
+rate_1970_female
+
+
+rate_2020_male <- exp(
+  #intercept 
+  coefficients["(Intercept)"] + 
+  #year
+  coefficients["year"] * 2020 + 
+  #male
+  coefficients["sexMale"] * 1 + 
+  #age 70-74
+  coefficients["agegroup70-74"] * 1 + 
+  # year*sex
+  coefficients["year:sexMale"] * 2020 * 1 + 
+  # year*age 70-74
+  coefficients["year:agegroup70-74"] * 2020 * 1 +
+  # sex*age 70-74 
+  coefficients["sexMale:agegroup70-74"] * 1 * 1)
+
+rate_2020_male
+
+rate_2020_female <- exp(
+  #intercept 
+  coefficients["(Intercept)"] + 
+    #year
+    coefficients["year"] * 2020 + 
+    #female
+    coefficients["sexMale"] * 0 + 
+    #age 70-74
+    coefficients["agegroup70-74"] * 1 + 
+    # year*sex
+    coefficients["year:sexMale"] * 2020 * 0 + 
+    # year*age 70-74
+    coefficients["year:agegroup70-74"] * 2020 * 1 +
+    # sex*age 70-74 
+    coefficients["sexMale:agegroup70-74"] * 0 * 1)
+
+
+rate_1970_male
+rate_1970_female
+rate_2020_male
+rate_2020_female
+
+#question10
+library(splines)
+
+#Add midpoints for age groups
+age_midpoints <- c(2, 7, 12, 17, 22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82, 87)
+age_mapping <- data.frame(
+  agegroup = c("0-4", "5-9", "10-14", "15-19", 
+               "20-24", "25-29", "30-34", "35-39", 
+               "40-44", "45-49", "50-54", "55-59", 
+               "60-64", "65-69", "70-74", "75-79", 
+               "80-84", "85-89"),
+  midpoint = age_midpoints
+)
+merged_data <- merge(merged_data, age_mapping, by = "agegroup")
+
+#Fit the Poisson regression model with splines
+poisson_model_splines <- glm(
+  n ~ ns(year, df = 4) * sex * ns(midpoint, df = 4),
+  offset = log(n_pop),
+  family = poisson(link = "log"),
+  data = merged_data
+)
+
+# Predict incidence rates
+# Create a grid for prediction
+prediction_data <- expand.grid(
+  year = seq(min(merged_data$year), max(merged_data$year), by = 1),
+  midpoint = c(52, 72, 87),
+  sex = c("Male", "Female")
+)
+
+# Add population to avoid warnings (use dummy values as predictions will standardize population)
+prediction_data$n_pop <- 1
+
+# Predict using the model
+prediction_data$predicted_incidence <- predict(
+  poisson_model_splines, 
+  newdata = prediction_data, 
+  type = "response"
+)
+
+# Compare with observed values
+observed_values <- merged_data %>%
+  filter(midpoint %in% c(52, 72, 87)) %>%
+  group_by(year, midpoint, sex) %>%
+  summarize(observed_rate = sum(n) / sum(n_pop))
+
+# Combine predicted and observed data
+comparison_data <- left_join(prediction_data, observed_values, by = c("year", "midpoint", "sex"))
+
+# Visualization
+ggplot(comparison_data, aes(x = year)) +
+  geom_line(aes(y = predicted_incidence, color = sex, linetype = "Predicted")) +
+  geom_point(aes(y = observed_rate, color = sex, shape = "Observed")) +
+  facet_wrap(~ midpoint, scales = "free_y", labeller = labeller(midpoint = c(
+    "52" = "Age 52 (50-54)", 
+    "72" = "Age 72 (70-74)", 
+    "87" = "Age 87 (85-89)"
+  ))) +
+  labs(
+    title = "Incidence Rate of Colon Cancer Over Time by Sex and Age",
+    x = "Year",
+    y = "Incidence Rate",
+    color = "Sex",
+    linetype = "Type",
+    shape = "Type"
+  ) +
+  theme_minimal()
