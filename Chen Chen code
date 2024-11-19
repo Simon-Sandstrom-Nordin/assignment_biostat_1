@@ -232,3 +232,72 @@ rate_1970_male
 rate_1970_female
 rate_2020_male
 rate_2020_female
+
+#question10
+library(splines)
+
+#Add midpoints for age groups
+age_midpoints <- c(2, 7, 12, 17, 22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82, 87)
+age_mapping <- data.frame(
+  agegroup = c("0-4", "5-9", "10-14", "15-19", 
+               "20-24", "25-29", "30-34", "35-39", 
+               "40-44", "45-49", "50-54", "55-59", 
+               "60-64", "65-69", "70-74", "75-79", 
+               "80-84", "85-89"),
+  midpoint = age_midpoints
+)
+merged_data <- merge(merged_data, age_mapping, by = "agegroup")
+
+#Fit the Poisson regression model with splines
+poisson_model_splines <- glm(
+  n ~ ns(year, df = 4) * sex * ns(midpoint, df = 4),
+  offset = log(n_pop),
+  family = poisson(link = "log"),
+  data = merged_data
+)
+
+# Predict incidence rates
+# Create a grid for prediction
+prediction_data <- expand.grid(
+  year = seq(min(merged_data$year), max(merged_data$year), by = 1),
+  midpoint = c(52, 72, 87),
+  sex = c("Male", "Female")
+)
+
+# Add population to avoid warnings (use dummy values as predictions will standardize population)
+prediction_data$n_pop <- 1
+
+# Predict using the model
+prediction_data$predicted_incidence <- predict(
+  poisson_model_splines, 
+  newdata = prediction_data, 
+  type = "response"
+)
+
+# Compare with observed values
+observed_values <- merged_data %>%
+  filter(midpoint %in% c(52, 72, 87)) %>%
+  group_by(year, midpoint, sex) %>%
+  summarize(observed_rate = sum(n) / sum(n_pop))
+
+# Combine predicted and observed data
+comparison_data <- left_join(prediction_data, observed_values, by = c("year", "midpoint", "sex"))
+
+# Visualization
+ggplot(comparison_data, aes(x = year)) +
+  geom_line(aes(y = predicted_incidence, color = sex, linetype = "Predicted")) +
+  geom_point(aes(y = observed_rate, color = sex, shape = "Observed")) +
+  facet_wrap(~ midpoint, scales = "free_y", labeller = labeller(midpoint = c(
+    "52" = "Age 52 (50-54)", 
+    "72" = "Age 72 (70-74)", 
+    "87" = "Age 87 (85-89)"
+  ))) +
+  labs(
+    title = "Incidence Rate of Colon Cancer Over Time by Sex and Age",
+    x = "Year",
+    y = "Incidence Rate",
+    color = "Sex",
+    linetype = "Type",
+    shape = "Type"
+  ) +
+  theme_minimal()
