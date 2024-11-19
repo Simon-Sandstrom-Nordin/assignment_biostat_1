@@ -12,6 +12,7 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 library(readr)
 library(tidyverse)
 library(ggplot2)
+library(splines)
 ```
 
 ```{r load data}
@@ -375,7 +376,7 @@ shows an increasing trend in time, both for females and for males separately.
 cases_pop_ys %>% 
   ggplot(aes(x = year, y = rate, color = sex)) +
   # smooth the curve
-  geom_smooth() +
+  geom_smooth(se= FALSE) +
   # non smoothed data
   geom_point(size = 0.5) +
   stat_summary(geom="line") +
@@ -439,6 +440,22 @@ cases_pop %>%
 cases_pop %>% 
   ggplot(aes(x = year, y = rate)) +
   facet_wrap(agegroup ~ sex, ncol = 6, scales = "free_y") +
+  # non smoothed data 
+  geom_point(size = 0.5, color = "light gray") +
+  stat_summary(geom="line", color = "light gray") +
+  # smooth the curve
+  geom_smooth() +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  #scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
+  # add labels and title
+  ggtitle("Incidence rate per 10^5 population by year, age group and sex") +
+  xlab("Year") + ylab("Number of cases per 10^5 population")
+
+
+cases_pop %>% 
+  ggplot(aes(x = year, y = rate, color = agegroup)) +
+  facet_wrap(~ sex, ncol = 2, scales = "free_y") +
   # non smoothed data 
   geom_point(size = 0.5, color = "light gray") +
   stat_summary(geom="line", color = "light gray") +
@@ -546,7 +563,7 @@ Thus, it can be modeled by including a log(n) term with coeffcient of 1 (no \( \
 ```{r Poisson}
 model <- cases_pop_ys %>%  
   glm(formula = n ~ year + sex + offset(log(n_pop)), family = "poisson")
-model
+summary(model)
 ```
 
 $log(n/n\_pop) = -29.69415 + 0.01094 * year -0.05592 * \delta_f(sex)$
@@ -575,7 +592,7 @@ exp(model$coefficients[1] + model$coefficients[2] * 2020 + model$coefficients[3]
 
 ### 3. Assumptions made regarding how the incidence rate changes over calendar years and difference between males and females
 
-* Rates for males and females have the same time dependence, and differ just by a constant term.\\
+* Rates for males and females have the same time dependence, and differ just by a constant term (multiplicative).\\
 
 * Repeat with mixing year*sex
 
@@ -678,6 +695,56 @@ exp(
 ```
 
 # Question 10: splines
+
+```{r splines}
+# splines_model <- cases_pop %>%
+#   mutate(agegroup = factor(agegroup, levels = factor_groups)) %>%
+#   glm(formula = n ~ bs(year,df = 4)*sex  + bs(year, df = 4)*bs(agegroup, df = 3)+ offset(log(n_pop)), family = "poisson")
+
+age <- seq(2,87,5)
+age_df <- data.frame(agegroup = factor_groups, age = age)
+
+splines_to_fit <- cases_pop %>%
+  inner_join(age_df)
+
+splines_model <- splines_to_fit %>% 
+  glm(formula = n ~ bs(year,df = 4)*sex + bs(year, df = 4)*age + offset(log(n_pop)), family = "poisson")
+
+summary(splines_model)
+
+#dataset <- data.frame(n = splines_model$y, fitted = splines_model$fitted.values)
+
+
+toplot <- splines_to_fit %>% add_column(fitted = splines_model$fitted.values)
+
+toplot %>% 
+  filter(age %in% c(52,72,87)) %>% 
+  ggplot(aes(x = year, y = fitted, color = agegroup)) +
+  geom_point() +
+  facet_wrap(~sex, ncol = 2) +
+  geom_point(size = 0.1) +
+  stat_summary(geom="line") +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
+  # add labels and title
+  ggtitle("Number of cases by year, age and sex") +
+  xlab("Year") + ylab("Number of cases") 
+```
+```{r comparison observed-fitted}
+toplot %>% 
+  pivot_longer(cols = c(n, fitted), names_to = "type") %>% 
+  filter(age %in% c(52,57,72,87)) %>% 
+  ggplot(aes(x = year, y = value, color = age)) +
+  geom_point(size = 0.5) +
+  facet_wrap(~sex, ncol = 2) +
+  theme_classic() + 
+  coord_cartesian(expand = FALSE) + 
+  scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
+  # add labels and title
+  ggtitle("Number of cases by year, age and sex") +
+  xlab("Year") + ylab("Number of cases") 
+```
 
 # Question 11: direct age standardised rate
 
