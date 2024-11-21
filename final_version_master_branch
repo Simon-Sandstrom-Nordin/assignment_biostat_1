@@ -63,6 +63,14 @@ The plot shows that:\\
 
 * more comment about f,m?
 
+We have variables are below: 
+AgeGroup 
+Year
+Sex
+The number of cases
+Conclusion : when age increases, the number of cancer cases are increasing too. Colon cancer tends to happen to the old aged group. We can guess age may be positively related to the colon cancer rate. In the plot, the age group 75-79 has the highest number of cases. And the age group over 80, the incidence rate tends to decrease.
+
+
 ## Question 2: total number of cases in each calendar year by males and females.
 
 <!-- # ```{r yearly plot} -->
@@ -101,6 +109,9 @@ cases %>%
 The graphs show an increasing trend in the yearly number of cases, both for females and males.
 
 By overlapping the curves
+
+
+The trend of the total cases of both sexes has continuously increased over the years.
 
 ```{r yearly plot 3}
 cases %>% 
@@ -320,6 +331,9 @@ population %>%
 ```
 \\
 
+Yes, the two datasets have the same age group and calendar years.
+
+
 # Question 4: merged information on number of cases and the number of persons at risk in each year, for each age group and sex. Data frame with the total number of cases and the total population size in each calendar year by males and females.\\
 
 ### merged dataframe, with age
@@ -373,6 +387,9 @@ cases_pop_ys <- cases_ys %>%
 
 Interpretation:\\
 Definition of incidence rate: "for a specific follow-up period, the number of new cases of the outcome divided by the total person-time at risk" (Adina Feldman, Lecture 2). In our case, for each period of one year, the number of new cases of cancer in that year, divided by the total person-time (1 year times population in that year). \\
+In this question, the definition of the incident rate = (total cases /total population) *100. Yes, it's a standard way to calculate the incidence rate, but it does't not consider the age distribution since colon cancer risk varies by age.
+
+
 
 ## Question 6: Plot the incidence rate of colon cancer over calendar time and apply a smoother, separately by males and females (here you can use the incidence rate based on the total number of cases and the total population size). Describe what you can conclude from the graphs. Create a graph of incidence rates over calendar year by sex and age group, and apply smoothers, what can you conclude
 
@@ -571,6 +588,8 @@ for(i in factor_groups){
 See different age structures in population for males and females:\\
 https://www.healthknowledge.org.uk/e-learning/epidemiology/specialists/standardisation
 
+The incidence rate of colon cancer has steadily increased over calendar time for both males and females.
+Females consistently have a higher incidence rate of colon cancer compared to males throughout the period.
 
 
 ## Question 7: Poisson model
@@ -599,6 +618,11 @@ $log(n/n\_pop) = -29.69415 + 0.01094 * year -0.05592 * \delta_f(sex)$
 with $\delta_f(sex = "Female") = 0$, $\delta_f(sex = "Male") = 1$, since sex = "Male" was taken as a reference by the gml() function.\\
 Where do I see the confidence intervals?
 
+The Poisson model estimates the total number of cases as the dependent variable, using population size as an offset and calendar year and sex as independent variables. 
+
+The estimated intercept is -29.69, representing the baseline log-incidence rate when the year is 0 and the reference category for sex (likely Female). The coefficient for the variable year is 0.01094 (p < 0.001), indicating a 1.1% annual increase in the incidence rate ((e^(0.01094) - 1) * 100), holding sex constant. The coefficient for sex (Male) is -0.05592 (p < 0.001), implying a 5.6% lower incidence rate for males compared to females, holding year constant.
+
+
 ## Question 8: 
 
 ### 1. Incidence rate in 1970 among males and females
@@ -625,6 +649,15 @@ exp(model$coefficients[1] + model$coefficients[2] * 2020 + model$coefficients[3]
 
 * Repeat with mixing year*sex
 
+Based on the model output, the estimated incidence rates in 1970 are 0.0002933 for females and 0.0002774 for males. In 2020, the incidence rates are 0.0005070 for females and 0.0004794 for males. The model assumes that the log-incidence rate changes linearly with the calendar year, leading to an annual incidence rate increase of 1.1% ((e^(0.01094) - 1) * 100).
+
+The key assumptions made in this model:
+
+* A linear relationship between year and log-incidence rate: log(μ) = β_0 + β_1(year) + β_2(sex)
+* A constant difference between males and females: β_2 = -0.0559, males have 5.5% lower incidence rates than females
+* No interactions among year, sex, age group.
+* Accurate population size as an offset: the population size is accurately measured and representative of the population at risk for both sexes and years.
+* Poisson distribution of the dependent variable: the variance in the number of cases increases with the expected number of cases.
 
 
 # Question 9 
@@ -723,6 +756,11 @@ exp(
     model_age$coefficients[52] * 0)
 ```
 
+Colon cancer is more common in older age groups, and the age distribution has shifted over time. To better estimate incidence rates, we refit the Poisson model by including interaction terms: "year * sex," "year * age group," and "sex * age group."
+
+Based on the updated model output, the estimated incidence rates in 1970 for the 70-74 age group are 0.001350 for males and 0.001098 for females. In 2020, the incidence rates for the same age group are 0.001846 for males and 0.001544 for females.
+
+
 # Question 10: splines
 
 ```{r splines}
@@ -775,6 +813,7 @@ toplot %>%
   ggtitle("Number of cases by year, age and sex") +
   xlab("Year") + ylab("Number of cases") 
 ```
+
 
 # Question 11: direct age standardised rate
 
@@ -989,3 +1028,12 @@ cases_pop_ys %>%
   ggtitle("Standardised vs non standarsised incidence rate - male population") +
   xlab("Year") + ylab("Number of cases per 10^4 population")
 ```
+
+
+question 13
+Incidence rates of colon cancer vary significantly across age groups, with older age groups generally having higher incidence rates.
+Over time, there is an overall increase in incidence rates for most age groups, particularly for middle-aged and older adults.
+The trend appears consistent across sexes, but certain age groups, especially older females, show slightly higher incidence rates compared to males.
+
+The overall incidence rates of colon cancer have increased steadily for both males and females over the years.
+Females consistently show slightly higher incidence rates compared to males throughout the observed time period.
