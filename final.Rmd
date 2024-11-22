@@ -1,7 +1,9 @@
 ---
 title: "Assignment 1"
-authors: "Group 1"
-output: html_document
+authors: Group 1
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE} 
@@ -748,7 +750,7 @@ toplot %>%
   facet_wrap(~sex, ncol = 2) +
   geom_point(size = 0.1) +
   stat_summary(geom="line") +
-  theme_classic() + 
+  theme(axis.text.x =  element_text(angle=45, hjust=1)) + 
   coord_cartesian(expand = FALSE) + 
   scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
   # add labels and title
@@ -795,7 +797,7 @@ ggplot(merged_data, aes(x = age_midpoint, y = incidence_rate)) +
   facet_wrap(~ sex) +
   labs(title = "Incidence Rate by Age",
        x = "Mid Age of Age Group",
-       y = "Incidence Rate (n / n_pop)") +
+       y = "Incidence Rate (Cases / Total Population)") +
   theme_minimal()
 
 # Fitting a generalized linear model using splines
@@ -863,7 +865,7 @@ ggplot(comparison_data, aes(x = year)) +
     color = "Legend"
   ) +
   scale_color_manual(values = c("Predicted" = "blue", "Observed" = "red")) +
-  theme_minimal()
+  theme(axis.text.x =  element_text(angle=45, hjust=1))
 ```
 # Question 11: direct age standardised rate
 
