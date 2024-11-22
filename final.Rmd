@@ -93,7 +93,8 @@ cases %>%
   xlab("Year") + ylab("Number of cases")
 ```
 
-The trend of the total reported cancer cases of both sexes has continuously increased over the years. \
+The graphs show an increasing trend in the yearly number of cases, both for females and males.\
+The trend of the total cases of both sexes has continuously increased over the years. \
 The total yearly number of reported cancer cases tends to be lower for males than for females.
 
 # Question 3: population, and plot of population size over age groups and calendar year simultaneously, separately by males and females.
@@ -167,7 +168,7 @@ population %>%
   theme_classic() +
   coord_cartesian(expand = FALSE) +
   # add labels and title
-  ggtitle("Proportion of Swedish population by age group.") +
+  ggtitle("Proportion of swedish population by age group.") +
   xlab("Year") + ylab("Population number")
 ```
 
@@ -191,7 +192,7 @@ population %>%
   theme_classic() +
   coord_cartesian(expand = FALSE) +
   # add labels and title
-  ggtitle("Overview of Swedish population by year, age group and sex") +
+  ggtitle("Overview of swedish population by year, age group and sex") +
   xlab("Year") + ylab("Population number")
 ```
 
@@ -222,6 +223,9 @@ cases_pop <- cases %>% left_join(population)
 ```
 
 ```{r}
+# ## check
+# cases %>% nrow() == cases_pop %>% nrow() 
+# population %>% nrow() == cases_pop %>% nrow() 
 cases_pop %>% head()
 ```
 
@@ -575,11 +579,13 @@ rate_2020_male
 rate_2020_female
 ```
 
+
+
 Colon cancer is more common in older age groups, and the age distribution has shifted over time. To better estimate incidence rates, we refit the Poisson model by including interaction terms: "year * sex," "year * age group," and "sex * age group."
 
 Based on the updated model output, the estimated incidence rates in 1970 for the 70-74 age group are 0.001350 for males and 0.001098 for females. In 2020, the incidence rates for the same age group are 0.001846 for males and 0.001544 for females.
 
-For 70-74 age group, the estimated incidence rates for females are lower than the estimated incidence rates for males 
+* For 70-74 age group, the estimated incidence rates for females are lower than the estimated incidence rates for males 
 
 ### Plot of the fit
 
@@ -602,66 +608,7 @@ toplot %>%
   xlab("Year") + ylab("Number of cases per 10^5 population") 
 ```
 
-
-# Question 10: splines
-
-A model with splines on year and age, with 4 degrees of freedom is fitted.
-
-```{r}
-age <- seq(2,87,5)
-age_df <- data.frame(agegroup = factor_groups, age = age)
-
-splines_to_fit <- cases_pop %>%
-  inner_join(age_df)
-
-splines_model <- splines_to_fit %>% 
-  glm(formula = n ~ bs(year,df = 4)*sex + bs(year, df = 4)*bs(age, df = 4) + offset(log(n_pop)), family = "poisson")
-
-summary(splines_model)
-
-
-toplot <- splines_to_fit %>% 
-  add_column(fitted = splines_model$fitted.values) %>% 
-  mutate(fitted_rate = 10^5* fitted/n_pop) 
-  
-
-toplot %>% 
-  filter(age %in% c(52,72,87)) %>% 
-  ggplot(aes(x = year, y = fitted_rate, color = agegroup)) +
-  facet_wrap(~sex, ncol = 2) +
-  geom_point(size = 0.1) +
-  stat_summary(geom="line") +
-  theme(axis.text.x =  element_text(angle=45, hjust=1)) + 
-  coord_cartesian(expand = FALSE) + 
-  scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
-  # add labels and title
-  ggtitle("Incidence rate by year, age and sex, fitted model") +
-  xlab("Year") + ylab("Number of cases per 10^5 population") 
-```
-```{r comparison observed-fitted}
-toplot %>% 
-  pivot_longer(cols = c(rate, fitted_rate), names_to = "type") %>% 
-  filter(age %in% c(52,72,87)) %>% 
-  ggplot(aes(x = year, y = value, color = factor(age))) +
-  geom_point(aes(shape = type), size = 0.5) +
-  facet_wrap(~sex, ncol = 2) +
-  theme_classic() + 
-  coord_cartesian(expand = FALSE) + 
-  #scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
-  # add labels and title
-  ggtitle("Incidence rate by year, age and sex, fitted and observed values") +
-  #xlab("Year") + ylab("Number of cases per 10^5 population") 
-  labs(
-    title = "Incidence rate by year, age and sex, fitted and observed values",
-    x = "Year",
-    y = "Number of cases per 10^5 population",
-    color = "Age"  # Change the legend title
-  )
-```
-
-
 # Question 10
-
 ```{r}
 # Merge cases and population data frames
 merged_data <- merge(cases, population, by = c("agegroup", "sex", "year"))
@@ -679,10 +626,10 @@ print(colnames(merged_data))
 
 # Plotting the relationship between mid age and incidence rate
 ggplot(merged_data, aes(x = age_midpoint, y = incidence_rate)) +
-  geom_point(alpha = 0.6) +
+  geom_point(alpha = 0.5, size = .1, position = position_jitter(w = 1,4, h = 0)) +
   geom_smooth(method = "loess", se = FALSE) +
   facet_wrap(~ sex) +
-  labs(title = "Incidence Rate by Age",
+  labs(title = "Incidence Rate by Age, with dots corresponding to different calendar years",
        x = "Mid Age of Age Group",
        y = "Incidence Rate (Cases / Total Population)") +
   theme_minimal()
@@ -721,6 +668,7 @@ library(ggplot2)
 
 ggplot(prediction_data, aes(x = year, y = predicted_incidence, color = sex, linetype = as.factor(age_midpoint))) +
   geom_line(size = 1.2) + 
+  scale_y_log10() +
   labs(title = "Predicted Incidence Rates Across Calendar Time",
        x = "Calendar Year",
        y = "Predicted Incidence Rate") +
@@ -754,6 +702,8 @@ ggplot(comparison_data, aes(x = year)) +
   scale_color_manual(values = c("Predicted" = "blue", "Observed" = "red")) +
   theme(axis.text.x =  element_text(angle=45, hjust=1))
 ```
+
+The blue interpolation might be misleading near the endpoints, as one could make the argument that the curve should follow a flatter or even negative curvature at that point. This may just be an effect of the smoothener applied.
 
 # Question 11: direct age standardised rate
 
@@ -963,5 +913,3 @@ Females consistently show slightly higher crude incidence rates compared to male
 <!-- When we don't take age into account, females tend to have higher incidence rates compared to males throughout the observed time period. \ -->
 
 When we take age into account females tend to have lower incidence rate than males (agegroup 75 up): this could be related to the fact, that, for these agegroups the female population is more numerous than men population \
-
-
