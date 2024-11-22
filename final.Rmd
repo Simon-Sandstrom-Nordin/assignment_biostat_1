@@ -692,7 +692,9 @@ toplot %>%
 
 
 # Question 10: splines
+
 A model with splines on year and age, with 4 degrees of freedom is fitted.
+
 ```{r splines}
 age <- seq(2,87,5)
 age_df <- data.frame(agegroup = factor_groups, age = age)
@@ -834,6 +836,7 @@ ggplot(comparison_data, aes(x = year)) +
   scale_color_manual(values = c("Predicted" = "blue", "Observed" = "red")) +
   theme(axis.text.x =  element_text(angle=45, hjust=1))
 ```
+
 # Question 11: direct age standardised rate
 
 Different years have different age structures:\\
