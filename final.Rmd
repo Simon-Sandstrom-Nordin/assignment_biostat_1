@@ -370,7 +370,6 @@ cases_pop_ys %>%
 When I normalize by population size, I see that the incidence rate per ten thousand population 
 shows an increasing trend in time, both for females and for males separately.
 
-Simon's
 ```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 # Merge the cases and population data
 merged_data <- cases %>%
@@ -412,17 +411,16 @@ ggplot(summary_data, aes(x = year, y = incidence_rate, color = sex)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-end Simon's
 
 Yearly count per ten thousand population is lower for males than for females.\\
 
 ### Age
-Simon
 
 ```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 # Plot incidence rates over time by sex and age group with smoothed lines
 ggplot(merged_data, aes(x = year, y = incidence_rate, color = agegroup, group = agegroup)) +
   geom_point(size = .8) +  # Points for visibility
+  scale_y_log10() +
   geom_smooth(method = "loess", span = 0.2, se = FALSE, linetype = "solid") +  # Smoothing with LOESS
   facet_wrap(~sex) +  # Separate plots for males and females
   scale_color_viridis_d(name = "Age Group") +  # Use viridis color scale for age groups
