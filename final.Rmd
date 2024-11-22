@@ -386,7 +386,7 @@ ggplot(merged_data, aes(x = year, y = incidence_rate, color = agegroup, group = 
 
 ### Facet plot with age groups, y scale free
 
-```{r facet plots for agegroups, females and males on the same plot, y values free, fig.width = 9, fig.height = 9}
+```{r, fig.width = 9, fig.height = 9}
 cases_pop %>% 
   ggplot(aes(x = year, y = rate, color = sex)) +
   facet_wrap(~ agegroup , ncol = 4, scales = "free_y") +
@@ -419,7 +419,7 @@ Females consistently have a higher incidence rate of colon cancer compared to ma
 
 ## Question 7: Poisson model
 
-```{r Poisson}
+```{r}
 poisson_model <- cases_pop_ys %>%  
   glm(formula = n ~ year + sex + offset(log(n_pop)), family = "poisson")
 summary(poisson_model)
@@ -434,7 +434,7 @@ The estimated intercept is -29.69, representing the baseline log-incidence rate 
 
 (e^(0.01094) - 1) * 100)  in dataset used for the regression, factor 100 is 10^4 instead
 
-```{r plot the poisson fit}
+```{r}
 toplot <- cases_pop_ys %>% 
   add_column(fitted = poisson_model$fitted.values) %>% 
   mutate(fitted_rate = 10^4* fitted/n_pop)
@@ -455,7 +455,7 @@ toplot %>%
 
 ## Question 8: 
 
-```{r }
+```{r}
 # Extract model coefficients 
 coefficients <- coef(poisson_model) 
 intercept <- coefficients["(Intercept)"] 
@@ -505,7 +505,7 @@ The key assumptions made in this model:
 
 # Question 9 
 
-```{r Poisson age}
+```{r}
 poisson_model_age <- cases_pop %>% 
   mutate(agegroup = factor(agegroup, levels = factor_groups)) %>% 
   glm(formula = n ~ year*sex + year*agegroup + agegroup * sex + offset(log(n_pop)), family = "poisson")
@@ -515,7 +515,7 @@ summary(poisson_model_age)
 ```
 
 
-```{r coefficients}
+```{r}
 # Extract model coefficients
 coefficients <- coef(poisson_model_age)
 
@@ -586,19 +586,19 @@ rate_2020_female <- exp(
 ```
 
 
-```{r rate males 1970}
+```{r}
 rate_1970_male
 ```
 
-```{r rate females 1970}
+```{r}
 rate_1970_female
 ```
 
-```{r rate males 2020}
+```{r}
 rate_2020_male
 ```
 
-```{r rate females 2020}
+```{r}
 rate_2020_female
 ```
 
@@ -612,7 +612,7 @@ Based on the updated model output, the estimated incidence rates in 1970 for the
 
 ### Plot of the fit
 
-```{r }
+```{r}
 toplot <- cases_pop %>% 
   add_column(fitted = poisson_model_age$fitted.values) %>% 
   mutate(fitted_rate = 10^5* fitted/n_pop)
@@ -636,7 +636,7 @@ toplot %>%
 
 A model with splines on year and age, with 4 degrees of freedom is fitted.
 
-```{r splines}
+```{r}
 age <- seq(2,87,5)
 age_df <- data.frame(agegroup = factor_groups, age = age)
 
@@ -685,7 +685,7 @@ toplot %>%
 
 # Question 10
 
-```{r }
+```{r}
 # Merge cases and population data frames
 merged_data <- merge(cases, population, by = c("agegroup", "sex", "year"))
 print(head(merged_data,n=5))
@@ -780,11 +780,7 @@ ggplot(comparison_data, aes(x = year)) +
 
 # Question 11: direct age standardised rate
 
-Different years have different age structures:\\
-https://www.healthknowledge.org.uk/e-learning/epidemiology/specialists/standardisation
-\\
-
-```{r standard pop}
+```{r}
 # reference values for male and female population
 standard_pop <- population %>%
   filter(year == 2022) %>%  
@@ -804,7 +800,7 @@ tot_female <- standard_pop %>%
 
 ### Standardised incidence rates:
 
-```{r standardise dataset}
+```{r}
 
 age_standardised_rates <- cases_pop %>% 
   select(-rate) %>% 
@@ -827,7 +823,7 @@ age_standardised_rates <- cases_pop %>%
 
 ### Plot of age standardised rates
 
-```{r plot age standardised rates}
+```{r}
 age_standardised_rates %>% 
    ggplot(aes(x = year, y = standardised_rate, color = sex)) +
   # smooth the curve
@@ -847,7 +843,7 @@ age_standardised_rates %>%
 ### Comparison with non standardised rates
 
 ### Females:
-```{r plot age standardised rates, females}
+```{r}
 cases_pop_ys %>% 
   filter(sex == "Female") %>% 
   left_join(age_standardised_rates) %>% 
@@ -870,7 +866,7 @@ cases_pop_ys %>%
 
 ### Males
 
-```{r plot age standardised rates, males}
+```{r}
 cases_pop_ys %>% 
   filter(sex == "Male") %>% 
   left_join(age_standardised_rates) %>% 
@@ -892,7 +888,7 @@ cases_pop_ys %>%
 
 # Question 12: direct age standardised rate on predicted data
 
-```{r fitted data}
+```{r}
 
 cases_pop_fit <- cases_pop %>% 
   select(-rate, -n) %>% 
@@ -923,7 +919,7 @@ Comparison of standardised rates obtained with fitted data, with standardised ra
 
 ### Females:
 
-```{r plot age standardised rates fitted females, fig.width = 9}
+```{r, fig.width = 9}
 cases_pop_ys %>% 
   filter(sex == "Female") %>% 
   left_join(age_standardised_rates) %>% 
@@ -946,7 +942,7 @@ cases_pop_ys %>%
 ```
 
 
-```{r plot age standardised rates fitted males, fig.width=9}
+```{r, fig.width=9}
 cases_pop_ys %>% 
   filter(sex == "Male") %>% 
   left_join(age_standardised_rates) %>% 
