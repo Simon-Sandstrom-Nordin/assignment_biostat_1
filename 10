@@ -1,0 +1,114 @@
+
+## 10. If you have not already done so, refit the model above using splines for the effect of calendar year and age group (use the mid point of each age group), and also make sure to not assume that the pattern across calendar year is the same across age and sex. 
+#Create graphs showing the incidence rate across calendar time for males and females at ages 52, 72 and 87. 
+#Compare with the observed values for age group 50-54, 70-74 and 85-89 from previously.
+
+# Install necessary libraries
+library(ggplot2)
+library(dplyr)
+library(splines)
+
+cases <- read.table("/Users/snehaagrawal/Desktop/Biostatistics_ComputerAssignment1/cases.tsv", sep = "\t", header = TRUE)
+# Print first 5 rows of the dataset 
+print(head(cases,n=5)) 
+summary(cases)
+str(cases)
+
+population <- read.table("/Users/snehaagrawal/Desktop/Biostatistics_ComputerAssignment1/population.tsv", sep = "\t", header = TRUE)
+print(head(population,n=5))
+summary(population)
+str(population)
+
+
+# Merge cases and population data frames
+merged_data <- merge(cases, population, by = c("agegroup", "sex", "year"))
+print(head(merged_data,n=5))
+
+merged_data <- merged_data %>%
+  mutate(
+    incidence_rate = (n / n_pop) * 100000,
+    age_midpoint = as.numeric(sub("-.*", "", agegroup)) + 2,
+    sex = factor(sex)
+      )
+  
+# Print column names to verify
+print(colnames(merged_data))
+
+# Plotting the relationship between mid age and incidence rate
+ggplot(merged_data, aes(x = age_midpoint, y = incidence_rate)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "loess", se = FALSE) +
+  facet_wrap(~ sex) +
+  labs(title = "Incidence Rate by Age",
+       x = "Mid Age of Age Group",
+       y = "Incidence Rate (n / n_pop)") +
+  theme_minimal()
+
+# Fitting a generalized linear model using splines
+splines_model <- glm(
+  formula = n ~ bs(year, df = 4)*bs(age_midpoint, df = 4)  * sex + offset(log(n_pop)),
+  data = merged_data,
+  family = poisson()
+)
+
+summary(splines_model)
+
+# Assuming you have your merged data as 'merged_data' and fitted model as 'model'
+# Create a new data frame for predictions
+age_groups <- c(52, 72, 87)
+sex_groups <- c("Female", "Male")
+years <- unique(merged_data$year)  # Get all unique years from your data
+
+# Create an empty data frame to store predictions
+prediction_data <- expand.grid(
+  year = years,
+  age_midpoint = age_groups,
+  sex = sex_groups
+)
+
+# Add population to avoid warnings (use dummy values as predictions will standardize population)
+prediction_data$n_pop <- 1
+
+
+# Use the predict() function to generate predicted values
+prediction_data$predicted_incidence <- predict(splines_model, newdata = prediction_data, type = "response")
+
+# Plotting the incidence rates over time for each sex at ages 52, 72, and 87
+library(ggplot2)
+
+ggplot(prediction_data, aes(x = year, y = predicted_incidence, color = sex, linetype = as.factor(age_midpoint))) +
+  geom_line(size = 1.2) + 
+  labs(title = "Predicted Incidence Rates Across Calendar Time",
+       x = "Calendar Year",
+       y = "Predicted Incidence Rate") +
+  scale_color_manual(values = c("blue", "red")) + 
+  scale_linetype_manual(values = c("solid", "dashed", "dotted")) +
+  theme_minimal() +
+  theme(legend.title = element_blank()) +
+  theme(legend.position = "bottom")
+
+# Compare with observed values
+observed_data <- merged_data %>%
+  filter(age_midpoint %in% c(52, 72, 87)) %>%
+  group_by(year, age_midpoint, sex) %>%
+  summarize(observed_rate = sum(n) / sum(n_pop))
+
+
+# Combine predicted and observed data
+comparison_data <- left_join(prediction_data, observed_data, by = c("year", "age_midpoint", "sex"))
+
+
+ggplot(comparison_data, aes(x = year)) +
+  geom_line(aes(y = predicted_incidence, color = "Predicted"), size = 1) +
+  geom_line(aes(y = observed_rate, color = "Observed"), size = 1, linetype = "dashed") +
+  facet_wrap(~ age_midpoint + sex, scales = "free_y") +
+  labs(
+    title = "Comparison of Predicted and Observed Incidence Rates",
+    x = "Calendar Year",
+    y = "Incidence Rate",
+    color = "Legend"
+  ) +
+  scale_color_manual(values = c("Predicted" = "blue", "Observed" = "red")) +
+  theme_minimal()
+  
+  
