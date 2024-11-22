@@ -698,7 +698,7 @@ ggplot(comparison_data, aes(x = year)) +
     color = "Legend"
   ) +
   scale_color_manual(values = c("Predicted" = "blue", "Observed" = "red")) +
-  theme_minimal()
+  theme(axis.text.x = element_text(angle=45, hjust=1))
 ```
 # Question 11: direct age standardised rate
 
