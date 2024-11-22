@@ -582,13 +582,11 @@ rate_2020_male
 rate_2020_female
 ```
 
-
-
 Colon cancer is more common in older age groups, and the age distribution has shifted over time. To better estimate incidence rates, we refit the Poisson model by including interaction terms: "year * sex," "year * age group," and "sex * age group."
 
 Based on the updated model output, the estimated incidence rates in 1970 for the 70-74 age group are 0.001350 for males and 0.001098 for females. In 2020, the incidence rates for the same age group are 0.001846 for males and 0.001544 for females.
 
-* For 70-74 age group, the estimated incidence rates for females are lower than the estimated incidence rates for males 
+For 70-74 age group, the estimated incidence rates for females are lower than the estimated incidence rates for males 
 
 ### Plot of the fit
 
