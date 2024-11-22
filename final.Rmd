@@ -76,24 +76,6 @@ Conclusion : when age increases, the number of cancer cases are increasing too. 
 ## Question 2: total number of cases in each calendar year by males and females.
 
 
-<!-- ```{r yearly plot 2} -->
-<!-- cases %>%  -->
-<!--   group_by(year, sex) %>%  -->
-<!--   summarize(n = sum(n)) %>%  -->
-<!--   ungroup() %>%  -->
-<!--   ggplot(aes(x = year, y = n)) + -->
-<!--   facet_wrap(~sex, ncol = 1) + -->
-<!--   stat_summary(geom="line") + -->
-<!--   theme_classic() +  -->
-<!--   coord_cartesian(expand = FALSE) +  -->
-<!--   scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4)))+ -->
-<!--   # add labels and title -->
-<!--   ggtitle("Number of cases by year and sex") + -->
-<!--   xlab("Year") + ylab("Number of cases") -->
-<!-- ``` -->
-
-
-
 ```{r}
 cases %>% 
   group_by(year,sex) %>% 
