@@ -28,7 +28,7 @@ factor_groups <- cases %>% pull(agegroup) %>% unique()
 cases <- cases %>% mutate(agegroup = factor(agegroup, levels = factor_groups)) 
 ```
 
-Dataset cases contains the yearly number of reported cancer cases (variable "n") by age group (variable "agegroup") and sex (variable "sex"), with variable "year" ranging from 1970 to 2022. Eighteen different age groups are defined, as:
+Dataset cases contains the yearly number of reported colon cancer cases (variable "n") by age group (variable "agegroup") and sex (variable "sex"), with variable "year" ranging from 1970 to 2022. Eighteen different age groups are defined, as:
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 cases %>% pull(agegroup) %>% unique()
@@ -850,12 +850,12 @@ cases_pop_ys %>%
   xlab("Year") + ylab("Number of cases per 10,000 population")
 ```
 
-The curve for the standardised fitted rates appears to follow the standardized original rates quite well for men. For females, however, this is not as clear, which might just be a consequence of the less linear curve for females' original rates with respect to the males'.
+The curve for the standardised fitted rates appears to follow the standardized original rates quite well for men. For females, however, this is not as clear, which might just be a consequence of the less linear curve for females' original rates with respect to males'.
 
 ## Question 13: Conclusions
 
-Incidence rates of colon cancer vary significantly across age groups, with older age groups generally having higher incidence rates as seen in the plot "Colon Cancer Incidence Rate by Sex and Age Group Over Time" in question 6. 
-  1. For age group 0-4 and 85-89 the incidence rate is more constant over the time period 1970- 2020 for males than for females. 
+Incidence rates of colon cancer vary significantly across age groups, with older age groups generally having higher incidence rates as seen in the plot "Colon Cancer Incidence Rate by Sex and Age Group Over Time" in question 6. \
+  1. For age group 0-4 and 85-89 the incidence rate is more constant over the time period 1970- 2020 for males than for females. \
   2. For age group 40-44 there was an increase by a factor of ten or so between the years 2000 and 2020 whereas there was no such change for females.\
 
 When we take age into account females tend to have lower incidence rate than males for ages 75 and older: this could be related to the fact, that, for these agegroups, the female population is more numerous than men population. \
