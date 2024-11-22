@@ -945,9 +945,9 @@ cases_pop_ys %>%
   xlab("Year") + ylab("Number of cases per 10^4 population")
 ```
 
-Rephrase:\
 
 Both for females and for males, compared to the original rates, the curve for the standardised rates has a greater value of the intercept and a smaller slope: standardized rates are higher than the original rates, and the maximum difference bertween the curves occurs the more distant in time from the current year. The difference between the curves decreases in time. \
+
 
 This can be explained by the aging of the population: the proportion of swedish population aged 75 or more increases in time (see plot with age proportions), and it's the highest in 2022, the reference year. This implies that when computing the standardised rate in year y, that year's rates for older population, which are in general the highest among the age groups, are weighted more.
 \[standardised ~ rate (y, sex) = \sum_{agegroups} rate(y, agegroup, sex) \cdot population~proportion(2022, agegroup, sex)\]
