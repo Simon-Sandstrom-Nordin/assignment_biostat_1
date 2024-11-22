@@ -652,7 +652,7 @@ toplot %>%
 toplot %>% 
   pivot_longer(cols = c(rate, fitted_rate), names_to = "type") %>% 
   filter(age %in% c(52,72,87)) %>% 
-  ggplot(aes(x = year, y = value, color = age)) +
+  ggplot(aes(x = year, y = value, color = factor(age))) +
   geom_point(aes(shape = type), size = 0.5) +
   facet_wrap(~sex, ncol = 2) +
   theme_classic() + 
@@ -660,7 +660,13 @@ toplot %>%
   #scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
   # add labels and title
   ggtitle("Incidence rate by year, age and sex, fitted and observed values") +
-  xlab("Year") + ylab("Number of cases per 10^5 population") 
+  #xlab("Year") + ylab("Number of cases per 10^5 population") 
+  labs(
+    title = "Incidence rate by year, age and sex, fitted and observed values",
+    x = "Year",
+    y = "Number of cases per 10^5 population",
+    color = "Age"  # Change the legend title
+  )
 ```
 
 
@@ -945,11 +951,11 @@ cases_pop_ys %>%
 ```
 
 
-Both for females and for males, compared to the original rates, the curve for the standardised rates has a greater value of the intercept and a smaller slope: standardized rates are higher than the original rates, and the maximum difference bertween the curves occurs the more distant in time from the current year. The difference between the curves decreases in time. \
+Both for females and for males, compared to the original rates, the curve for the standardised rates has a greater value at the intercept and a smaller slope, especially initially. Howerver, as time is increased, the slopes tend to allign. The Standardized rates are consistently higher than the original rates, with the difference decreasing monotonely over time. \
 
+This can be explained by the different structure in the population over the years and the proportional increase in population aged 75 and older, where cancer rates are in general the highest.
 
-This can be explained by the aging of the population: the proportion of swedish population aged 75 or more increases in time (see plot with age proportions), and it's the highest in 2022, the reference year. This implies that when computing the standardised rate in year y, that year's rates for older population, which are in general the highest among the age groups, are weighted more.
-\[standardised ~ rate (y, sex) = \sum_{agegroups} rate(y, agegroup, sex) \cdot population~proportion(2022, agegroup, sex)\]
+For males the fit is almost completely within the confidence band, wheras for the female group the fit is not. This might just be a consequence of the more constant curvature for males than for females, as the female fit fluctuates more.
 
 # Question 13: conclusions
 
