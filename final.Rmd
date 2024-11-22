@@ -169,7 +169,7 @@ population %>%
   theme_classic() +
   coord_cartesian(expand = FALSE) +
   # add labels and title
-  ggtitle("Proportion of Swedish population by age group.") +
+  ggtitle("Proportion of swedish population by age group.") +
   xlab("Year") + ylab("Population number")
 ```
 
@@ -193,7 +193,7 @@ population %>%
   theme_classic() +
   coord_cartesian(expand = FALSE) +
   # add labels and title
-  ggtitle("Overview of Swedish population by year, age group and sex") +
+  ggtitle("Overview of swedish population by year, age group and sex") +
   xlab("Year") + ylab("Population number")
 ```
 
@@ -207,7 +207,7 @@ population %>%
   theme_classic() +
   coord_cartesian(expand = FALSE) +
   # add labels and title
-  ggtitle("Overview of Swedish population by year, age group and sex") +
+  ggtitle("Overview of swedish population by year, age group and sex") +
   xlab("Year") + ylab("Population number")
 ```
 
@@ -672,6 +672,7 @@ library(ggplot2)
 
 ggplot(prediction_data, aes(x = year, y = predicted_incidence, color = sex, linetype = as.factor(age_midpoint))) +
   geom_line(size = 1.2) + 
+  scale_y_log10() +
   labs(title = "Predicted Incidence Rates Across Calendar Time",
        x = "Calendar Year",
        y = "Predicted Incidence Rate") +
