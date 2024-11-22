@@ -94,8 +94,7 @@ cases %>%
   xlab("Year") + ylab("Number of cases")
 ```
 
-The graphs show an increasing trend in the yearly number of cases, both for females and males.\
-The trend of the total cases of both sexes has continuously increased over the years. \
+The trend of the total reported cancer cases of both sexes has continuously increased over the years. \
 The total yearly number of reported cancer cases tends to be lower for males than for females.
 
 # Question 3: population, and plot of population size over age groups and calendar year simultaneously, separately by males and females.
