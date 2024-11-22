@@ -63,7 +63,7 @@ cases %>%
 
 The plot shows that:\
 
-* both for females and males separately, the total number of cases registered between 1970 and 2022 increases with age, reaches a peak at age group 75-79 and then decreases with age. \
+* both for females and males separately, the total number of reported cases registered between 1970 and 2022 increases with age, reaches a peak at age group 75-79 and then decreases with age. \
 
 We have variables are below: \
 AgeGroup \
@@ -144,13 +144,12 @@ all(unique(cases$agegroup) %in% unique(population$agegroup))
 # Compare calendar years
 all(unique(cases$year) %in% unique(population$year))
 ```
+
 Dataset population includes the same age groups and calendar years as dataset cases.
 
 ```{r}
 population <- population %>%  mutate(agegroup = factor(agegroup, levels = factor_groups)) 
 ```
-
-
 
 ```{r}
 population %>%
@@ -951,7 +950,6 @@ cases_pop_ys %>%
   xlab("Year") + ylab("Number of cases per 10^4 population")
 ```
 
-Rephrase:\
 
 Both for females and for males, compared to the original rates, the curve for the standardised rates has a greater value at the intercept and a smaller slope, especially initially. Howerver, as time is increased, the slopes tend to allign. The Standardized rates are consistently higher than the original rates, with the difference decreasing monotonely over time. \
 
