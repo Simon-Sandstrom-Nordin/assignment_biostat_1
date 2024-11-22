@@ -222,7 +222,6 @@ population <- population %>%  mutate(agegroup = factor(agegroup, levels = factor
 <!--   xlab("Year") + ylab("Population number") -->
 <!-- ``` -->
 
-#### Not needed
 
 ```{r population, plot 2b proportion, less agegroups}
 population %>%
@@ -246,7 +245,7 @@ population %>%
   xlab("Year") + ylab("Population number")
 ```
 
-### Plot, attempt 3
+### Plot, males and females bigger age groups
 
 ```{r population, plot 3}
 population %>%
@@ -270,7 +269,7 @@ population %>%
   xlab("Year") + ylab("Population number")
 ```
 
-### Plot, attempt 4
+### Plot, males and females
 
 ```{r population, plot 4, fig.height=10}
 population %>%
