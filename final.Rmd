@@ -1033,7 +1033,10 @@ This can be explained by the aging of the population: the proportion of swedish 
 
 # Question 13: conclusions
 
-Incidence rates of colon cancer vary significantly across age groups, with older age groups generally having higher incidence rates.
+Incidence rates of colon cancer vary significantly across age groups, with older age groups generally having higher incidence rates as seen in the plot "Colon Cancer Incidence Rate by Sex and Age Group Over Time" in question 6. 
+  1. For age group 0-4 and 85-89 the incidence rate is more constant over the time period 1970- 2020 for males than for females. 
+  2. For age group 40-44 there was an increase by a factor of ten or so between the years 2000 and 2020 whereas there was no such change for females. 
+
 Over time, there is an overall increase in incidence rates for most age groups, particularly for middle-aged and older adults.
 The trend appears consistent across sexes, but certain age groups, especially older females, show slightly higher incidence rates compared to males.
 
