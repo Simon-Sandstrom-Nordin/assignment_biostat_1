@@ -268,38 +268,6 @@ population %>%
   xlab("Year") + ylab("Population number")
 ```
 
-<!-- ### Not needed -->
-<!-- ### comparison 1970 - 2022, distribution of sex -->
-
-<!-- ```{r 1970 vs 2022, proportion} -->
-<!-- population %>% -->
-<!--   filter(year %in% c(1970, 2022)) %>%  -->
-<!--   ggplot(aes(x = agegroup, y = n_pop, fill = sex)) + -->
-<!--   facet_wrap(~year, ncol = 2) + -->
-<!--   geom_bar(position="fill", stat="identity") +  -->
-<!--   theme_classic() + -->
-<!--   coord_cartesian(expand = FALSE) + -->
-<!--   # add labels and title -->
-<!--   ggtitle("Sex distribution by age group, years 1970 and 2022") + -->
-<!--   xlab("age group") + ylab("Proportion of population") -->
-<!-- ``` -->
-
-<!-- ### Not needed  -->
-<!-- ### comparison 1970 - 2022, distribution of sex  -->
-
-<!-- ```{r 1970 - 2022, count} -->
-<!-- population %>% -->
-<!--   filter(year %in% c(1970, 2022)) %>%  -->
-<!--   ggplot(aes(x = agegroup, y = n_pop, fill = sex)) + -->
-<!--   facet_wrap(~year, ncol = 2) + -->
-<!--   geom_bar(stat="identity", position = position_dodge()) +  -->
-<!--   theme_classic() + -->
-<!--   coord_cartesian(expand = FALSE) + -->
-<!--   # add labels and title -->
-<!--   ggtitle("Sex distribution by age group, years 1970 and 2022") + -->
-<!--   xlab("age group") + ylab("Proportion of population") -->
-<!-- ``` -->
-<!-- \\ -->
 
 Yes, the two datasets have the same age group and calendar years.
 
