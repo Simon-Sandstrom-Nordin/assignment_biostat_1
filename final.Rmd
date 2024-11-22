@@ -3,6 +3,7 @@ title: "Assignment 1"
 authors: Group 1
 output:
   pdf_document: default
+    latex_engine: xelatex
   html_document: default
 ---
 
