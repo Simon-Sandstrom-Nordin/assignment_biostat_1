@@ -63,7 +63,7 @@ cases %>%
 
 The plot shows that:\
 
-* both for females and males separately, the total number of cases registered between 1970 and 2022 increases with age, reaches a peak at age group 75-79 and then decreases with age. \
+* both for females and males separately, the total number of reported cases registered between 1970 and 2022 increases with age, reaches a peak at age group 75-79 and then decreases with age. \
 
 We have variables are below: \
 AgeGroup \
