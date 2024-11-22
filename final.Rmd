@@ -57,7 +57,6 @@ cases %>%
   # add labels and title
   ggtitle("Number of cases by age group and sex, years 1970-2022") +
   xlab("Age group") + ylab("Number of cases")
- 
 ```
 
 
@@ -247,8 +246,8 @@ population_ys <- population %>%
 ```{r}
 # rate per hundred thousand population, dataset with age
 cases_pop <- cases_pop %>% 
-  # rate per 10^5 population
-  mutate(rate = 10^5 * n/n_pop)
+  # rate per 10^4 population
+  mutate(rate = 10^4 * n/n_pop)
 
 # rate per ten thousand population, dataset without age
 # create dataset without age variable
@@ -260,12 +259,9 @@ cases_pop_ys <- cases_ys %>%
 
 Interpretation:\
 
-Definition of incidence rate: "for a specific follow-up period, the number of new cases of the outcome divided by the total person-time at risk" (Adina Feldman, Lecture 2). In our case, for each period of one year, the number of new cases of cancer in that year, divided by the total person-time (1 year times population in that year). \
+Definition of incidence rate: "for a specific follow-up period, the number of new cases of the outcome divided by the total person-time at risk" (Adina Feldman, Lecture 2). In our case, for each period of one year, the incidence rate is defined as the number of new reported cases of cancer in that year, divided by the total person-time (1 year times population in that year). \
 
-In this question, the definition of the incident rate = (total cases /total population) *100.
-(In the previous plots  (total cases/total population) * 10^4) Yes, it's a standard way to calculate the incidence rate, but it does't not consider the age distribution since colon cancer risk varies by age.
-
-
+In this document, incidence rates are rescaled by a factor of $10^4$, and for each year they correspond to the number of reported cases per 10000 population.
 
 ## Question 6: Plot the incidence rate of colon cancer over calendar time and apply a smoother, separately by males and females (here you can use the incidence rate based on the total number of cases and the total population size). Describe what you can conclude from the graphs. Create a graph of incidence rates over calendar year by sex and age group, and apply smoothers, what can you conclude
 
@@ -287,7 +283,7 @@ cases_pop_ys %>%
   xlab("Year") + ylab("Number of cases per 10^4 population")
 ```
 
-When I normalize by population size, I see that the incidence rate per ten thousand population 
+The incidence rate per ten thousand population 
 shows an increasing trend in time, both for females and for males separately.
 
 ```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
