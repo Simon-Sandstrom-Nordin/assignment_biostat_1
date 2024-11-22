@@ -245,7 +245,7 @@ population %>%
   xlab("Year") + ylab("Population number")
 ```
 
-### Plot, males and females bigger age groups
+### Plot, males and females bigger age groups 
 
 ```{r population, plot 3}
 population %>%
