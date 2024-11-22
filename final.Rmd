@@ -144,13 +144,12 @@ all(unique(cases$agegroup) %in% unique(population$agegroup))
 # Compare calendar years
 all(unique(cases$year) %in% unique(population$year))
 ```
+
 Dataset population includes the same age groups and calendar years as dataset cases.
 
 ```{r}
 population <- population %>%  mutate(agegroup = factor(agegroup, levels = factor_groups)) 
 ```
-
-
 
 ```{r}
 population %>%
