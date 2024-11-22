@@ -541,6 +541,8 @@ toplot %>%
   ggtitle("Incidence rate by year and sex, fitted and observed values") +
   xlab("Year") + ylab("Number of cases per 10^4 population") 
 ```
+
+
 ## Question 8: 
 
 ```{r }
@@ -1074,5 +1076,3 @@ When we don't take age into account, females tend to have higher incidence rates
 When we take age into account females tend to have lower incidence rate than males (agegroup 75 up): this could be related to the fact, that, for these agegroups the female population is more numerous than men population \
 
 Comment about standardization....\
-
-change
