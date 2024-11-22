@@ -1,10 +1,8 @@
 ---
 title: "Assignment 1"
-authors: Group 1
+authors: "Group 1"
 output:
   html_document: default
-  pdf_document:
-    latex_engine: xelatex
 ---
 
 ```{r, include=FALSE} 
@@ -30,7 +28,7 @@ factor_groups <- cases %>% pull(agegroup) %>% unique()
 cases <- cases %>% mutate(agegroup = factor(agegroup, levels = factor_groups)) 
 ```
 
-Dataset cases contains the yearly number of cancer cases (variable "n") by age group (variable "agegroup") and sex (variable "sex"), with variable "year" ranging from 1970 to 2022. Eighteen different age groups are defined, as:
+Dataset cases contains the yearly number of reported cancer cases (variable "n") by age group (variable "agegroup") and sex (variable "sex"), with variable "year" ranging from 1970 to 2022. Eighteen different age groups are defined, as:
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 cases %>% pull(agegroup) %>% unique()
@@ -41,7 +39,7 @@ Two sex groups are defined, as:
 cases %>% pull(sex) %>% unique()
 ```
 
-## Question 1: plot the number of cases by age group and sex
+## Question 1: Plot of the number of cases by age group and sex
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width = 9}
 cases %>% 
@@ -62,7 +60,7 @@ cases %>%
 
 From the plot we can conclude that, both for females and males separately, the total number of reported cases registered between 1970 and 2022 increases with age, reaches a peak at age group 75-79 and then decreases with age. 
 
-## Question 2: total number of cases in each calendar year by males and females.
+## Question 2: Total number of cases in each calendar year by males and females.
 
 ```{r}
 cases %>% 
@@ -85,7 +83,7 @@ cases %>%
 The graph shows an increasing trend in the yearly number of cases, both for females and males.\
 The total yearly number of reported cancer cases tends to be lower for males than for females.
 
-## Question 3: population, and plot of population size over age groups and calendar year simultaneously, separately by males and females.
+## Question 3: Population
 
 ### The dataset
 
@@ -109,7 +107,7 @@ all(unique(cases$year) %in% unique(population$year))
 
 Below we plot an overview of population size by age group and year.
 
-```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+```{r, results='hide', message=FALSE, warning=FALSE}
 data_population <- readr::read_tsv("population.tsv")
 data_population$agegroup <- factor(data_population$agegroup, levels = c("0-4", "5-9", "10-14", "15-19", 
                                                               "20-24", "25-29", "30-34", "35-39", 
@@ -163,32 +161,33 @@ population %>%
   facet_wrap(~sex, ncol = 2) +
   geom_bar(position="fill", stat="identity") +
   theme_classic() +
+  theme(axis.text.x =  element_text(angle=45, hjust=1)) +
   coord_cartesian(expand = FALSE) +
   # add labels and title
-  ggtitle("Proportion of swedish population by age group.") +
-  xlab("Year") + ylab("Population number")
+  ggtitle("Proportion of Swedish population by age group.") +
+  xlab("Year") + ylab("Fraction of population")
 ```
 
 ### Line Plots
 
-The following plots shows the population size between genders across different age groups.
+The following plots show the population size between genders across different age groups.
 
-```{r}
+```{r,  fig.height = 8, fig.width = 9}
 population %>%
   ggplot(aes(x = year, y = n_pop, color = sex)) +
   facet_wrap(~agegroup, ncol = 3) +
   stat_summary(geom="line")+
   theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   coord_cartesian(expand = FALSE) +
   # add labels and title
-  ggtitle("Overview of swedish population by year, age group and sex") +
+  ggtitle("Overview of Swedish population by year, age group and sex") +
   xlab("Year") + ylab("Population number")
 ```
 
 
-# Question 4: merge the datasets
+## Question 4: Merge the datasets
 
-### merged dataframe, with age
 ```{r}
 # merging datasets
 cases_pop <- cases %>% left_join(population) 
@@ -198,7 +197,7 @@ cases_pop <- cases %>% left_join(population)
 cases_pop %>% head()
 ```
 
-### Cases and population datasets summarized.
+### Cases and population datasets summarized
 
 ```{r}
 # cases by year and sex
@@ -221,7 +220,7 @@ merged <- cases_ys %>%
 ## Question 5: Incidence rate
 
 ```{r}
-# rate per hundred thousand population, dataset with age
+# rate per ten thousand population, dataset with age
 cases_pop <- cases_pop %>% 
   # rate per 10^4 population
   mutate(rate = 10^4 * n/n_pop)
@@ -260,7 +259,7 @@ summary_data <- merged_data %>%
 
 ```
 
-```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+```{r, results='hide', message=FALSE, warning=FALSE}
 # Calculate incidence rate for detailed data
 merged_data <- merged_data %>%
   mutate(incidence_rate = n / n_pop * 10000)  # Rate per 10000 people
@@ -270,7 +269,7 @@ summary_data <- summary_data %>%
   mutate(incidence_rate = total_cases / total_population * 10000)  # Rate per 10000 people
 ```
 
-```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+```{r, results='hide', message=FALSE, warning=FALSE}
 # Plot incidence rate over time with smoother (separately for males and females)
 ggplot(summary_data, aes(x = year, y = incidence_rate, color = sex)) +
   geom_point(size = 1) +  # Points for visibility
@@ -291,9 +290,9 @@ shows an increasing trend in time, both for females and for males separately.\
 The incidence rate tends to be lower for males than for females.\
 
 
-### Age
+### Including age
 
-```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+```{r, results='hide', message=FALSE, warning=FALSE}
 # Plot incidence rates over time by sex and age group with smoothed lines
 ggplot(merged_data, aes(x = year, y = incidence_rate, color = agegroup, group = agegroup)) +
   geom_point(size = .8) +  # Points for visibility
@@ -318,7 +317,7 @@ ggplot(merged_data, aes(x = year, y = incidence_rate, color = agegroup, group = 
 ```
 
 
-### Facet plot with age groups, y scale free
+### Facet plot with age groups
 
 ```{r, fig.width = 9, fig.height = 9}
 cases_pop %>% 
@@ -334,17 +333,15 @@ cases_pop %>%
   #scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
   # add labels and title
   ggtitle(paste("Incidence rate by sex and age group")) + 
-  xlab("Year") + ylab("Number of cases per 10^4 population") 
+  xlab("Year") + ylab("Number of cases per 10,000 population") 
   
 ```
+
 From the plots we can conclude:
 
-* Comparing different ages, trends for age-specific incidence rates are different for different ages.\\
+* Trends for age-specific incidence rates are different for different age groups.
 
-* Comparing females and males, while the **crude** incidence rate values tend to be higher for females than for males, the age-specific incidence rates have a tendency to be higher for females than for males, when age groups are s.t. age < 55. They tend to be lower for females than for males when age groups are s.t. age => 60 years. 
-\\
-
-The incidence rate of colon cancer has steadily increased over calendar time for both males and females.
+* Comparing females and males, while the crude incidence rate values tend to be higher for females than for males, the age-specific incidence rates have a tendency to be higher for females than for males, when age groups are s.t. age is less than 55. They tend to be lower for females than for males when age groups are s.t. age is greater or equal to 60. 
 
 ## Question 7: Poisson model
 
@@ -354,12 +351,12 @@ poisson_model <- cases_pop_ys %>%
 summary(poisson_model)
 ```
 
-$log(n/n\_pop) = -29.69415 + 0.01094 \cdot year -0.05592 \cdot \delta_f(sex)$
-with $\delta_f(sex = "Female") = 0$, $\delta_f(sex = "Male") = 1$, since sex = "Male" was taken as a reference by the gml() function.\
-
 The Poisson model estimates the total number of cases as the dependent variable, using population size as an offset and calendar year and sex as independent variables. \
+The estimated model is:
+$log(n/n\_pop) = -29.69415 + 0.01094 \cdot year -0.05592 \cdot \delta_f(sex)$\
+with $\delta_f(sex = "Female") = 0$, $\delta_f(sex = "Male") = 1$.\
 
-The estimated intercept is -29.69, representing the baseline log-incidence rate when the year is 0 and the reference category for sex (likely Female). The coefficient for the variable year is 0.01094 (p < 0.001), indicating a 1.1% annual increase in the incidence rate ((e^(0.01094) - 1) * 100), holding sex constant. The coefficient for sex (Male) is -0.05592 (p < 0.001), implying a 5.6% lower incidence rate for males compared to females, holding year constant.
+The estimated intercept is -29.69, representing the baseline log-incidence rate when the year is 0 and the reference category for sex (Female). The coefficient for the variable year is 0.01094 (p < 0.001), indicating a 1.1% annual increase in the incidence rate ((e^(0.01094) - 1) * 100), holding sex constant. The coefficient for sex (Male) is -0.05592 (p < 0.001), implying a 5.6% lower incidence rate for males compared to females, holding year constant.
 
 ```{r}
 toplot <- cases_pop_ys %>% 
@@ -367,20 +364,21 @@ toplot <- cases_pop_ys %>%
   mutate(fitted_rate = 10^4* fitted/n_pop)
 
 toplot %>% 
-  pivot_longer(cols = c(rate, fitted_rate), names_to = "type") %>% 
-  ggplot(aes(x = year, y = value)) +
-  geom_point(aes(color = type), size = 0.5) +
+  #pivot_longer(cols = c(rate, fitted_rate), names_to = "type") %>% 
+  ggplot(aes(x = year)) +
+  geom_point(aes(y = rate), size = 0.5) +
+  geom_line(aes(y = fitted_rate)) +
   facet_wrap(~sex, ncol = 2) +
   theme_classic() + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   coord_cartesian(expand = FALSE) + 
-  #scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
   # add labels and title
   ggtitle("Incidence rate by year and sex, fitted and observed values") +
-  xlab("Year") + ylab("Number of cases per 10^4 population") 
+  xlab("Year") + ylab("Number of cases per 10,000 population") 
 ```
 
 
-## Question 8: 
+## Question 8: Incidence rate values and assumptions
 
 ```{r}
 # Extract model coefficients 
@@ -412,6 +410,7 @@ incidence_2020_female
 Based on the model output, the estimated incidence rates in 1970 are 0.0002933 for females and 0.0002774 for males. In 2020, the incidence rates are 0.0005070 for females and 0.0004794 for males. 
 
 ### Assumptions 
+
 The assumptions made in this model are:
 
 
@@ -422,11 +421,8 @@ The assumptions made in this model are:
 * Accurate population size as an offset: the population size is accurately measured and representative of the population at risk for both sexes and years.
 * Poisson distribution of the dependent variable: the variance in the number of cases increases with the expected number of cases.
 
-<!-- * A constant difference in log(μ) between males and females: β_2 = -0.0559, males have 5.5% lower incidence rates than females  -->
-<!-- ((mu_males-mu_females)/mu_females = exp(-0.0559)-1 = -0.054) -->
 
-
-# Question 9: Adjusting for age
+## Question 9: Adjusting for age
 
 Colon cancer is more common in older age groups, and the age distribution has shifted over time. To better estimate incidence rates, we refit the Poisson model by including interaction terms: "year * sex," "year * age group," and "sex * age group."
 
@@ -546,15 +542,20 @@ toplot %>%
   scale_y_log10()+
   facet_wrap(~sex, ncol = 2) +
   theme_classic() + 
+  theme(axis.text.x =  element_text(angle=45, hjust=1)) +
   coord_cartesian(expand = FALSE) + 
   #scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
   # add labels and title
   ggtitle("Incidence rate by year, age group and sex, fitted and observed values") +
-  xlab("Year") + ylab("Number of cases per 10^4 population (log scale)") 
+  xlab("Year") + ylab("Number of cases per 10,000 population (log scale)") 
 ```
-The fit cannot always capture the curvature in the data, for example in the case of females and ages 85-89.
 
-# Question 10
+
+The fit cannot always capture the curvature in the data, for example in the case of females aged 85-89.
+
+
+## Question 10: Splines
+
 ```{r}
 # Merge cases and population data frames
 merged_data <- merge(cases, population, by = c("agegroup", "sex", "year"))
@@ -562,7 +563,7 @@ print(head(merged_data,n=5))
 
 merged_data <- merged_data %>%
   mutate(
-    incidence_rate = (n / n_pop) * 100000,
+    incidence_rate = (n / n_pop) * 10000,
     age_midpoint = as.numeric(sub("-.*", "", agegroup)) + 2,
     sex = factor(sex)
       )
@@ -580,6 +581,7 @@ ggplot(merged_data, aes(x = age_midpoint, y = incidence_rate)) +
        y = "Incidence Rate (Cases / Total Population)") +
   theme_minimal()
 ```
+
 
 The blue interpolation might be misleading near the endpoints, as one could make the argument that the curve should follow a flatter or even negative curvature at that point. This may just be an effect of the smoothener applied.
 
@@ -655,11 +657,12 @@ comparison_data %>%
   scale_color_manual(values = c("Predicted" = "blue", "Observed" = "red")) +
   theme(axis.text.x =  element_text(angle=45, hjust=1))
 ```
+
 Compared to the fit without splines, the plot shows that the fitted curves follow relatively well the distribution of the data. \
 The computed AIC is 11780 and it is lower than the AIC of the fit without splines (11967), indicating a better fit.
 
 
-# Question 11: direct age standardised rate
+## Question 11: Direct age standardised rate
 
 ```{r}
 # reference values for male and female population
@@ -679,7 +682,7 @@ tot_female <- standard_pop %>%
   pull(ref_pop) %>% sum()
 ```
 
-### Standardised incidence rates:
+### Standardised incidence rates
 
 ```{r}
 
@@ -702,28 +705,29 @@ age_standardised_rates <- cases_pop %>%
   mutate(standardised_rate = 10^4 * standardised_rate)
 ```
 
-### Plot of age standardised rates
+### Plot of the age standardised rates
 
 ```{r}
 age_standardised_rates %>% 
    ggplot(aes(x = year, y = standardised_rate, color = sex)) +
   # smooth the curve
-  geom_smooth() +
+  geom_smooth(se = FALSE) +
   # non smoothed data
-  geom_point(size = 0.5) +
-  stat_summary(geom="line") +
+  geom_point(size = 1) +
+  #stat_summary(geom="line") +
   theme_classic() + 
   coord_cartesian(expand = FALSE) + 
   scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
   # add labels and title
   ggtitle("Standardised incidence rate: cases per 10^4 population by year and sex") +
-  xlab("Year") + ylab("Number of cases per 10^4 population - standardised")
+  xlab("Year") + ylab("Number of cases per 10,000 population - standardised")
 ```
 
 
 ### Comparison with non standardised rates
 
-### Females:
+### Females
+
 ```{r}
 cases_pop_ys %>% 
   filter(sex == "Female") %>% 
@@ -732,16 +736,16 @@ cases_pop_ys %>%
   pivot_longer(cols = c(rate, standardised_rate), names_to = "type") %>% 
   ggplot(aes(x = year, y = value, color = type))+
   # smooth the curve
-  geom_smooth() +
+  geom_smooth(se = FALSE) +
   # non smoothed data
-  geom_point(size = 0.5) +
-  stat_summary(geom="line") +
+  geom_point(size = 1) +
+  # stat_summary(geom="line") +
   theme_classic() + 
   coord_cartesian(expand = FALSE) + 
   scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
   # add labels and title
   ggtitle("Standardised vs non standarsised incidence rate - female population") +
-  xlab("Year") + ylab("Number of cases per 10^4 population")
+  xlab("Year") + ylab("Number of cases per 10,000 population")
 ```
 
 
@@ -755,26 +759,25 @@ cases_pop_ys %>%
   pivot_longer(cols = c(rate, standardised_rate), names_to = "type") %>% 
   ggplot(aes(x = year, y = value, color = type))+
   # smooth the curve
-  geom_smooth() +
+  geom_smooth(se = FALSE) +
   # non smoothed data
-  geom_point(size = 0.5) +
-  stat_summary(geom="line") +
+  geom_point(size = 1) +
+  # stat_summary(geom="line") +
   theme_classic() + 
   coord_cartesian(expand = FALSE) + 
   scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
   # add labels and title
   ggtitle("Standardised vs non standarsised incidence rate - male population") +
-  xlab("Year") + ylab("Number of cases per 10^4 population")
+  xlab("Year") + ylab("Number of cases per 10,000 population")
 ```
 
 Both for females and for males, compared to the original rates, the curve for the standardised rates has a greater value at the intercept and a smaller slope, especially initially. Howerver, as time is increased, the slopes tend to allign. The standardized rates are consistently higher than the original rates, with the difference decreasing monotonely over time. \
 
-This can be explained by the different structure in the population over the years and the proportional increase in population aged 75 and older, where cancer rates are in general the highest.
+This could be explained by the different structure in the population over the years and the proportional increase in population aged 75 and older, where cancer rates are in general the highest.
 
-# Question 12: direct age standardised rate on predicted data
+## Question 12: Direct age standardised rate on predicted data - Poisson model with ages
 
 ```{r}
-
 cases_pop_fit <- cases_pop %>% 
   select(-rate, -n) %>% 
   # replace number of cases with fitted number of cases, which should already be in the right order
@@ -802,7 +805,7 @@ age_standardised_rates_fit <- cases_pop_fit %>%
 
 Comparison of standardised rates obtained with fitted data, with standardised rates from the orginal dataset.
 
-### Females:
+### Females
 
 ```{r, fig.width = 9}
 cases_pop_ys %>% 
@@ -822,9 +825,10 @@ cases_pop_ys %>%
   scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
   # add labels and title
   ggtitle("Standardised vs non standarsised incidence rate - female population") +
-  xlab("Year") + ylab("Number of cases per 10^4 population")
+  xlab("Year") + ylab("Number of cases per 10,000 population")
 ```
 
+### Males
 
 ```{r, fig.width=9}
 cases_pop_ys %>% 
@@ -843,24 +847,20 @@ cases_pop_ys %>%
   scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
   # add labels and title
   ggtitle("Standardised vs non standarsised incidence rate - male population") +
-  xlab("Year") + ylab("Number of cases per 10^4 population")
+  xlab("Year") + ylab("Number of cases per 10,000 population")
 ```
 
-The curve for the standardised fitted rates appears to follow the standardized original rates quite well for men. For female, however, this is no as clear, which might just be a consequence of the less linear curve for females than for males, as the female standardized original rates fluctuate more.
+The curve for the standardised fitted rates appears to follow the standardized original rates quite well for men. For females, however, this is not as clear, which might just be a consequence of the less linear curve for females' original rates with respect to the males'.
 
-# Question 13: conclusions
+## Question 13: Conclusions
 
 Incidence rates of colon cancer vary significantly across age groups, with older age groups generally having higher incidence rates as seen in the plot "Colon Cancer Incidence Rate by Sex and Age Group Over Time" in question 6. 
   1. For age group 0-4 and 85-89 the incidence rate is more constant over the time period 1970- 2020 for males than for females. 
-  2. For age group 40-44 there was an increase by a factor of ten or so between the years 2000 and 2020 whereas there was no such change for females.
+  2. For age group 40-44 there was an increase by a factor of ten or so between the years 2000 and 2020 whereas there was no such change for females.\
 
-When we take age into account females tend to have lower incidence rate than males (agegroup 75 up): this could be related to the fact, that, for these agegroups the female population is more numerous than men population \
+When we take age into account females tend to have lower incidence rate than males for ages 75 and older: this could be related to the fact, that, for these agegroups, the female population is more numerous than men population. \
 
-Over time, there is an overall increase in incidence rates for most age groups, particularly for middle-aged and older adults.
-<!-- The trend appears consistent across sexes, but certain age groups, especially older females, show slightly higher incidence rates compared to males. -->
-
-<!-- The overall incidence rates of colon cancer have increased steadily for both males and females over the years.\ -->
+Over time, there is an overall increase in incidence rates for most age groups, particularly for middle-aged and older adults.\
 
 Females consistently show slightly higher crude incidence rates compared to males throughout the observed time period. \
 
-<!-- When we don't take age into account, females tend to have higher incidence rates compared to males throughout the observed time period. \ -->
