@@ -245,44 +245,6 @@ population %>%
   xlab("Year") + ylab("Population number")
 ```
 
-### Plot, males and females bigger age groups 
-
-```{r population, plot 3}
-population %>%
-  mutate(group = case_when(
-    agegroup %in% factor_groups[1:3] ~ "0-14",
-    agegroup %in% factor_groups[4:6] ~ "15-29",
-    agegroup %in% factor_groups[7:9] ~ "30-44",
-    agegroup %in% factor_groups[10:12] ~ "45-59",
-    agegroup %in% factor_groups[13:15] ~ "60-74",
-    agegroup %in% factor_groups[16:18] ~ "75-89",
-    TRUE ~ NA
-    )
-    ) %>%
-  ggplot(aes(x = year, y = n_pop, color = sex)) +
-  facet_wrap(~group, ncol = 3) +
-  stat_summary(geom="line")+
-  theme_classic() +
-  coord_cartesian(expand = FALSE) +
-  # add labels and title
-  ggtitle("Overview of swedish population by year, age group and sex") +
-  xlab("Year") + ylab("Population number")
-```
-
-### Plot, males and females
-
-```{r population, plot 4, fig.height=10}
-population %>%
-  ggplot(aes(x = year, y = n_pop, color = sex)) +
-  facet_wrap(~agegroup, ncol = 3) +
-  stat_summary(geom="line")+
-  theme_classic() +
-  coord_cartesian(expand = FALSE) +
-  # add labels and title
-  ggtitle("Overview of swedish population by year, age group and sex") +
-  xlab("Year") + ylab("Population number")
-```
-
 <!-- ### Not needed -->
 <!-- ### comparison 1970 - 2022, distribution of sex -->
 
@@ -477,6 +439,7 @@ ggplot(merged_data, aes(x = year, y = incidence_rate, color = agegroup, group = 
     y = "Incidence Rate (per 100,000)",
     color = "Age Group"
   ) +
+  scale_y_log10() +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   theme(
@@ -1228,4 +1191,3 @@ When we don't take age into account, females tend to have higher incidence rates
 When we take age into account females tend to have lower incidence rate than males (agegroup 75 up): this could be related to the fact, that, for these agegroups the female population is more numerous than men population \
 
 Comment about standardization....\
-
