@@ -168,7 +168,7 @@ population %>%
   theme_classic() +
   coord_cartesian(expand = FALSE) +
   # add labels and title
-  ggtitle("Proportion of swedish population by age group.") +
+  ggtitle("Proportion of Swedish population by age group.") +
   xlab("Year") + ylab("Population number")
 ```
 
@@ -192,7 +192,7 @@ population %>%
   theme_classic() +
   coord_cartesian(expand = FALSE) +
   # add labels and title
-  ggtitle("Overview of swedish population by year, age group and sex") +
+  ggtitle("Overview of Swedish population by year, age group and sex") +
   xlab("Year") + ylab("Population number")
 ```
 
@@ -223,9 +223,6 @@ cases_pop <- cases %>% left_join(population)
 ```
 
 ```{r}
-# ## check
-# cases %>% nrow() == cases_pop %>% nrow() 
-# population %>% nrow() == cases_pop %>% nrow() 
 cases_pop %>% head()
 ```
 
