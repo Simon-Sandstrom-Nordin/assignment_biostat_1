@@ -65,8 +65,6 @@ The plot shows that:\
 
 * both for females and males separately, the total number of cases registered between 1970 and 2022 increases with age, reaches a peak at age group 75-79 and then decreases with age. \
 
-* more comment about f,m?\
-
 We have variables are below: \
 AgeGroup \
 Year\
@@ -372,7 +370,6 @@ cases_pop_ys %>%
 When I normalize by population size, I see that the incidence rate per ten thousand population 
 shows an increasing trend in time, both for females and for males separately.
 
-Simon's
 ```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 # Merge the cases and population data
 merged_data <- cases %>%
@@ -414,17 +411,16 @@ ggplot(summary_data, aes(x = year, y = incidence_rate, color = sex)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-end Simon's
 
 Yearly count per ten thousand population is lower for males than for females.\\
 
 ### Age
-Simon
 
 ```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 # Plot incidence rates over time by sex and age group with smoothed lines
 ggplot(merged_data, aes(x = year, y = incidence_rate, color = agegroup, group = agegroup)) +
   geom_point(size = .8) +  # Points for visibility
+  scale_y_log10() +
   geom_smooth(method = "loess", span = 0.2, se = FALSE, linetype = "solid") +  # Smoothing with LOESS
   facet_wrap(~sex) +  # Separate plots for males and females
   scale_color_viridis_d(name = "Age Group") +  # Use viridis color scale for age groups
@@ -694,7 +690,9 @@ toplot %>%
 
 
 # Question 10: splines
+
 A model with splines on year and age, with 4 degrees of freedom is fitted.
+
 ```{r splines}
 age <- seq(2,87,5)
 age_df <- data.frame(agegroup = factor_groups, age = age)
@@ -836,6 +834,7 @@ ggplot(comparison_data, aes(x = year)) +
   scale_color_manual(values = c("Predicted" = "blue", "Observed" = "red")) +
   theme(axis.text.x =  element_text(angle=45, hjust=1))
 ```
+
 # Question 11: direct age standardised rate
 
 Different years have different age structures:\\
