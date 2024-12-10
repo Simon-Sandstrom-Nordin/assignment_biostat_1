@@ -167,6 +167,15 @@ di <- di %>% mutate(decile = ntile(predicted_risk, 10))
 
 
 ### (a)Modification version
+### Calibration Curve. To evaluate the performance of the prediction model we have computed the AUC
+#from ROC analysis, now please plot the calibration curve and report the slope and the intercept of the
+#calibration curve. Use the model you chose before.
+
+# The slope of our calibrated model is 8.699679, whic is much larger than 1. This indicates that 
+#predicted risks were too extreme in the sense of underestimating for patients at high risk while overestimating for patients at low risk
+#and is indicative of underfitting of the model.
+# The intercept of our calibrated model is -3.342517, which means the model is overestimating the likelihood of positive outcomes.
+
 
 # Fit logistic regression to evaluate calibration
 calibration_logistic_model <- glm(chd69 ~ predicted_risk, family = binomial, data = di)
@@ -193,6 +202,8 @@ cat("Logistic Calibration Slope:", logistic_slope, "\n")
 cat("Logistic Calibration Intercept:", logistic_intercept, "\n")
 
 
+# Through the Hosmer-Lemeshow test(the null hypothesis is the model fits the data well) outcome, we get that p-value is 0.6796 ( >0.05), which indicates we fail to reject the null hypothesis.
+#The model shows no significant lack of fit.
 #5.(b)  the method of Hosmer and Lemeshow
 
 install.packages("ResourceSelection")
@@ -207,6 +218,7 @@ hl_test <- hoslem.test(di$chd69, di$predicted_risk, g = 10)  # g = 10 for decile
 print(hl_test)
  
 #5.(c)
+#“The model using agegroup as the sole predictor has an AUC value of 0.6063. This suggests that the model has limited discriminatory power, indicating that it needs further refinement.”needs to be revised.
 
 agegroup_model <- glm(chd69 ~ agegroup, family = binomial, data = di)
 summary(agegroup_model)
@@ -226,6 +238,11 @@ cat("AUC for Agegroup Model:", auc(agegroup_roc), "\n")
 
 
 #Q5.c , d
+###To compare the discrimination between the model we used before and the only agegroup model with a statistical test,
+#we use the DeLong’s test to assess if the difference in AUC between the two models is statistically significant.
+# Through the outcome shows below, we found that Z = 8.7945, which indicates that the difference in AUCs is large.
+# p-value < 2.2e-16 is extremely small, meaning that the difference in AUCs is highly statistically significant.
+
 
 # Predicted probabilities from both models
 di$full_model_pred <- predict(model2, di, type = "response")  # Full model
