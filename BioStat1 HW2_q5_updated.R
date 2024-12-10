@@ -242,7 +242,7 @@ cat("AUC for Agegroup Model:", auc(agegroup_roc), "\n")
 #we use the DeLong’s test to assess if the difference in AUC between the two models is statistically significant.
 # Through the outcome shows below, we found that Z = 8.7945, which indicates that the difference in AUCs is large.
 # p-value < 2.2e-16 is extremely small, meaning that the difference in AUCs is highly statistically significant.
-
+# The 95% confidence interval (CI) is (0.118 to 0.185), which does not include 0, meaning the difference in AUCs is statistically significant.
 
 # Predicted probabilities from both models
 di$full_model_pred <- predict(model2, di, type = "response")  # Full model
@@ -257,6 +257,8 @@ roc_test <- roc.test(full_model_roc, agegroup_roc, method = "delong")
 print(roc_test)
 
 #Q5 e
+
+
 # full model
 plot(full_model_roc, col = "blue", lwd = 2, main = "ROC Curves: Full Model vs Agegroup-Only Model")
 # agegroup-only model
