@@ -218,7 +218,7 @@ hl_test <- hoslem.test(di$chd69, di$predicted_risk, g = 10)  # g = 10 for decile
 print(hl_test)
  
 #5.(c)
-#“The model using agegroup as the sole predictor has an AUC value of 0.6063. This suggests that the model has limited discriminatory power, indicating that it needs further refinement.”needs to be revised.
+#The model using agegroup as the sole predictor has an AUC value of 0.6063. This suggests that the model has limited discriminatory power, indicating that it needs further refinement.
 
 agegroup_model <- glm(chd69 ~ agegroup, family = binomial, data = di)
 summary(agegroup_model)
