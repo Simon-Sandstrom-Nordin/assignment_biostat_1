@@ -3,7 +3,7 @@
 # a)
 
 library(dcurves) 
-
+ 
 dca(chd69 ~ predicted_risk, 
     data = di, 
     thresholds = seq(0, 0.35, by = 0.01)) %>%
