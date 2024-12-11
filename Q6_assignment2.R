@@ -2,7 +2,7 @@
 # 
 # a)
 
-library(dcurves)
+library(dcurves) 
 
 dca(chd69 ~ predicted_risk, 
     data = di, 
