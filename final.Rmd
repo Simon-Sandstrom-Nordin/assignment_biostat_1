@@ -1,7 +1,10 @@
 ---
 title: "Assignment 1"
-authors: "Group 1"
+author: Group 1
+date: "`r Sys.Date()`"
 output:
+  pdf_document:
+    latex_engine: xelatex
   html_document: default
 ---
 
@@ -327,7 +330,6 @@ cases_pop %>%
   geom_smooth(se = FALSE) +
   # non smoothed data
   geom_point(size = 0.2) +
-  stat_summary(geom="line", size = 0.05) +
   theme_classic() + 
   coord_cartesian(expand = FALSE) + 
   #scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
@@ -353,7 +355,7 @@ summary(poisson_model)
 
 The Poisson model estimates the total number of cases as the dependent variable, using population size as an offset and calendar year and sex as independent variables. \
 The estimated model is:
-$log(n/n\_pop) = -29.69415 + 0.01094 \cdot year -0.05592 \cdot \delta_f(sex)$\
+$\log(n/n\_pop) = -29.69415 + 0.01094 \cdot year -0.05592 \cdot \delta_f(sex)$\
 with $\delta_f(sex = "Female") = 0$, $\delta_f(sex = "Male") = 1$.\
 
 The estimated intercept is -29.69, representing the baseline log-incidence rate when the year is 0 and the reference category for sex (Female). The coefficient for the variable year is 0.01094 (p < 0.001), indicating a 1.1% annual increase in the incidence rate ((e^(0.01094) - 1) * 100), holding sex constant. The coefficient for sex (Male) is -0.05592 (p < 0.001), implying a 5.6% lower incidence rate for males compared to females, holding year constant.
@@ -714,7 +716,6 @@ age_standardised_rates %>%
   geom_smooth(se = FALSE) +
   # non smoothed data
   geom_point(size = 1) +
-  #stat_summary(geom="line") +
   theme_classic() + 
   coord_cartesian(expand = FALSE) + 
   scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
@@ -739,7 +740,6 @@ cases_pop_ys %>%
   geom_smooth(se = FALSE) +
   # non smoothed data
   geom_point(size = 1) +
-  # stat_summary(geom="line") +
   theme_classic() + 
   coord_cartesian(expand = FALSE) + 
   scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +
@@ -762,7 +762,6 @@ cases_pop_ys %>%
   geom_smooth(se = FALSE) +
   # non smoothed data
   geom_point(size = 1) +
-  # stat_summary(geom="line") +
   theme_classic() + 
   coord_cartesian(expand = FALSE) + 
   scale_x_continuous(lim = c(1970, 2022), breaks = c(seq(1970, 2022, by = 4))) +

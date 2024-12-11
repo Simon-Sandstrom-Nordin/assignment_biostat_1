@@ -1,0 +1,267 @@
+---
+title: "Assignment 2"
+author: "Joakim Axnér"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## The Data Step
+```{r}
+# Load packages
+# (It seems that not all packages are necessary to solve the assignment. We
+# can probably remove a few of them.)
+pacman::p_load(tidyverse,rms,haven,mgcv,epitools,logistf,nlpred,geepack,
+skimr,pROC,tableone,emmeans,glmtoolbox,CalibrationCurves,mice,dcurves)
+```
+
+```{r}
+# Prepare data
+data(wcgs)
+wcgs$dibpat0f<-factor(wcgs$dibpat0,levels=0:1,label=c("B","A"))
+wcgs$agegroup <- cut(wcgs$age0,breaks=c(39,45,55,60),include.lowest = T,right = FALSE)
+wcgs$smoker <- ifelse(wcgs$ncigs0>0,1,0)
+wcgs$smokerf <- factor(wcgs$smoker,levels=c(0,1),labels=c("No","Yes"))
+wcgs$heightcm <- wcgs$height0*2.54
+wcgs$weightkg <- wcgs$weight0*0.45359237
+wcgs$bmi <- wcgs$weightkg / (wcgs$heightcm/100)^2
+wcgs$bmicat <- cut(wcgs$bmi,breaks=c(0,25,30,40),include.lowest = T,right = FALSE)
+wcgs$cholmmol <- wcgs$chol0/39
+wcgs$sbp10 <- wcgs$sbp0/10
+wcgs$sbpcat <- cut(wcgs$sbp0,breaks=c(0,140,240),include.lowest = T,right = FALSE)
+wcgs$chd69f <- factor(wcgs$chd69,levels=c(0,1),labels=c("No","Yes"))
+wcgs$cholmmol <- ifelse(wcgs$cholmmol<15,wcgs$cholmmol,NA)
+
+# My question: Why do we convert smoker and dibpat0 to factors, but not arcus0 and chd69?
+# Also: What is the advantage of using agegroup over age0?
+
+# Decide on variables to use
+d <- wcgs %>% select(id,agegroup,age0,cholmmol,sbp10,bmi,smokerf,arcus0,dibpat0f,chd69)
+
+# Drop rows with missing values. We won't actually use this set so I commented it out.
+#dc <- d %>% drop_na()
+
+# Analysis set with imputed values
+# added local so that we don't clutter the global namespace with too many variables
+di <- local({
+  set.seed(154550)
+  imp <- mice(d, m=1, maxit=0)
+  predM<-imp$predictorMatrix
+  # Leave out the ID column (the first column)
+  predM[, 1] <- 0
+  meth<-imp$method
+  dimp <- mice(d, method= "pmm" ,m=1,predictorMatrix = predM, maxit=15, seed=71332, print=FALSE)
+  complete(dimp,1)
+})
+
+```
+
+## 1. Table 1
+Describe all variables:
+* id - an unique identifier for each subject in the dataset
+* age0 - age of the subject in years
+* agegroup - age categorized into groups: 39-45, 45-55, and 55-60 years
+* cholmmol - cholesterol level measured in mmol/L
+* sbp10 - systolic blood pressure divided by 10 measured in mm Hg
+* bmi - body mass index, a measure of obesity
+* smokerf - subject is a smoker (No/Yes)
+* arcus0 - indicator of corneal arcus (0 = none, 1 = yes)
+* dibpat0f - Dichotomous behavior pattern (A or B)
+* chd69 - indicator of whether the subject had a coronary heart disease event (0 = no, 1 = yes)
+
+Create table 1
+```{r}
+CreateTableOne(data=di)
+```
+Show both original data and imputed data. (The imputed data is `di`, but what
+is the original data? Is it `wcgs` or `d`?)
+
+## 2.
+a) The outcome variable is `chd69`.
+
+b) All variables are risk factors, except for `id`.
+* agegroup/age0
+* cholmmol
+* sbp10
+* bmi
+* smokerf
+* arcus0 
+* dibpat0f
+
+c) Each row in the dataset represents a person, so we can just count the number
+of rows:
+```{r}
+nrow(di) # 3154 rows
+```
+
+d) The prevalence of disease is the proportion of rows with `chd69 = 1` in the
+dataset.
+```{r}
+sum(di$chd69)/nrow(di)
+```
+
+## 3.
+Since outcome is binary (1 or 0) a logistic model is natural. We should exlude
+`id` since it is not a predictor. We should also not include both `age0` or
+`agegroup` in the model to avoid multicollinearity. (Excluding `agegroup` gives
+lower AIC, but a model with `agegroup` might be easier to interpret.)
+
+```{r}
+# fit a simple logistic model
+model <- glm(chd69 ~ . -id -agegroup, family=binomial, data=di)
+summary(model)
+```
+
+b)
+Some of the variables are correlated. They might be good candidates
+for interaction terms. For example
+* bmi and blood pressure (sbp10)
+* age and arcus
+* age and blood pressure (sbp10)
+* bmi and smoking (smokerf)
+* cholesterol (cholmmol) and arcus
+* cholesterol and blood pressure (sbp10)
+* smoking and cholesterol
+```{r}
+# print correlation matrix
+# TODO: maybe a nicer plot
+cor_matrix <- cor(data.matrix(subset(di, select = c(-agegroup, - id, -chd69))))
+cor_matrix
+```
+
+We can try to automatically find the best (lowest AIC) combination of interaction
+terms by using the `step` function
+```{r, echo=F}
+# start model
+model <- glm(chd69 ~ . -id -agegroup, family=binomial, data=di)
+# try to find a better model by varying predictors and adding interactions
+model2 <- step(model, scope = c(lower = chd69 ~ 1, upper = chd69 ~ (.-id-agegroup)^2))
+summary(model2)
+```
+
+The final model has an AIC of `r model2$aic`.
+
+c) We can calculate predicted risk with the `pred` function
+```{r}
+di$predicted_risk <- predict(model2, data=di, type="response")
+```
+
+## 4. Discrimination
+a)
+How good is the model you have built to discriminate between cases and non-cases?
+(This is typically evaluated using the ROC curve and AUC.)
+
+Please plot the ROC curve and calculate the AUC of the ROC curve including 95% confidence intervals.
+```{r}
+myroc <- roc(chd69 ~ predicted_risk,
+             data=di,
+             levels=c(control=0, case=1),
+             direction="<",
+             auc=T,
+             ci=T)
+```
+
+```{r}
+# plot of ROC curve
+plot(myroc)
+```
+
+```{r}
+# AUC - area under curve
+myroc$auc
+```
+
+```{r}
+# 95% confidence interval for AUC
+myroc$ci
+```
+
+b) Please plot the ROC curve (again?) and find the threshold that maximizes the sum of the sensitivity and
+specificity. Please report the sensitivity and specificity at that threshold.
+
+The threshold that maximizes the sum of sensitivity and specificity is
+```{r}
+max_index <- which.max(myroc$sensitivities+myroc$specificities)
+myroc$thresholds[max_index]
+```
+At that threshold, the sensitivity is
+```{r}
+myroc$sensitivities[max_index]
+```
+and the specificity is
+```{r}
+myroc$specificities[max_index]
+```
+
+<!-- This is just my interpretation. We are not asked for this. -->
+That means if we classify all subjects with predicted risk greater than 8.4% as 1,
+then we will correctly classify 70.8% of the subjects that are truly positive
+and 70.1% of the subjects that are truly negative.
+
+In total, we would correctly classify 70.1% of the subjects.
+```{r}
+sum(di$chd69 == (di$predicted_risk>myroc$thresholds[max_index]))/nrow(di)
+```
+
+c) AUC adjusted for optimism.To adjust for optimism in the predictions, we can use the bootstrapping
+method using 200 repetitions. Please calculate the adjusted AUC with 95% confidence intervals and
+compare it to the unadjusted AUC. Is there a difference in the unadjusted and the adjusted AUC?
+hint: you can use the validate function from package rms to estimate the adjusted value for auc due to
+optimism via the bootstrap method.
+
+(TODO: How to compute a 95% confidence interval for the adjusted AUC?)
+
+```{r}
+# We can't use the glm model directly, need to refit it using lrm
+# lrm(model2$formula, data=di, x=T, y=T)
+
+# This is sufficient to compute the adjusted AUC, but there seems
+# to be no way to compute the 95% confidence interval
+#v <- validate(fit=lrm(model2$formula, data=di, x=T, y=T), B=200)
+
+# Initialize a vector to store bootstrapped AUCs
+bootstrap_auc <- numeric(200)
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Perform bootstrap sampling
+for (i in 1:200) {
+  # Sample data with replacement
+  bootstrap_sample <- di[sample(1:nrow(di), replace = TRUE), ]
+  
+  # Fit the model using the bootstrapped sample
+  model <- glm(chd69 ~ predicted_risk, data = bootstrap_sample, family = binomial)
+  
+  # Make predictions on the bootstrapped sample
+  predicted_bootstrap <- predict(model, bootstrap_sample, type = "response")
+  
+  # Calculate the AUC for the bootstrapped sample
+  roc_bootstrap <- roc(bootstrap_sample$chd69 ~ predicted_bootstrap, levels = c(control = 0, case = 1), direction = "<")
+  bootstrap_auc[i] <- roc_bootstrap$auc
+}
+
+# Compute 95% CI from the bootstrapped AUC values
+ci_lower <- quantile(bootstrap_auc, 0.025)
+ci_upper <- quantile(bootstrap_auc, 0.975)
+
+print(paste("Bootstrap AUC 95% CI: ", round(ci_lower, 3), " - ", round(ci_upper, 3)))
+
+
+
+# Compute optimism as the difference between the training and testing AUCs
+optimism <- mean(bootstrap_auc) - unadjusted_auc
+
+# Adjusted AUC
+adjusted_auc <- unadjusted_auc - optimism
+print(paste("Adjusted AUC: ", adjusted_auc))
+
+```
+
+d) Cross validation. Use 10-fold cross-validation for a logistic model to obtain the adjusted AUC and compare to the unadjusted and adjusted AUC.
+
+TODO
+
