@@ -155,6 +155,7 @@ original_auc #0.7578
 adjusted_auc #0.7501229
 cv_auc #0.7445533
 ############################################
+# The slight decrease in AUC values from 0.75 to 0.74 indicates, a slight overfitted model and the 10 K-fold cross validation gave us more reliable estiamte of the model's true performance 
 #5. a Calibration Curve
 
 library(ggplot2)
