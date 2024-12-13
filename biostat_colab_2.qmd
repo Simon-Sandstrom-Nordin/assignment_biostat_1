@@ -45,7 +45,7 @@ di <- local({
 CreateTableOne(data=di)
 ```
 
-#2. Overall risk or overall rate
+# 2. Overall risk or overall rate
 a What is the outcome we are interested in? chd69
 
 b.What are the known risk factors for our outcome of interest?
@@ -243,7 +243,7 @@ cat("Logistic Calibration Intercept:", logistic_intercept, "\n")
 Through the Hosmer-Lemeshow test(the null hypothesis is the model fits the data well) outcome, we get that p-value is 0.6796 ( >0.05), which indicates we fail to reject the null hypothesis.
 The model shows no significant lack of fit.
 
-#5.(b)  the method of Hosmer and Lemeshow
+# 5.(b)  the method of Hosmer and Lemeshow
 
 ```{r}
 library(ResourceSelection)
