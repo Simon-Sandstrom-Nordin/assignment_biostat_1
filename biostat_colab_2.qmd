@@ -336,11 +336,11 @@ dca(chd69 ~ predicted_risk,
 
 dca(chd69 ~ predicted_risk, 
     data = di, 
-    thresholds = seq(0.35, 0.8, by = 0.01)) %>%
+    thresholds = seq(0.35, 1, by = 0.01)) %>%
   plot(smooth = TRUE)+
   ggtitle("Net benefits plot for selected model, tresholds 0.35-0.80") + 
   theme_classic() + 
-  coord_cartesian(xlim = c(0.35, 0.8),
+  coord_cartesian(xlim = c(0.35, 1),
                   ylim = c(0,0.082)) +
   suppressMessages(scale_x_continuous(expand = c(0, 0))) 
 ```
@@ -352,7 +352,7 @@ The plots show the net benefits as a function of the threshold probability, for 
  
 b) The model's net benefit curve is above the treat-all net benefit curve. The model is thus clinically beneficial.\
  Threshold probabilities such that the model is clinically beneficial are 0%-26%. For these thresholds, the model's net benefits are positive and greater than the treat-all net benefits. For higher thresholds, the model's net benefits are comparable to zero.\
-Thresholds in the third figure (probabilities .4 to .8) are not clinically relevant as the net benefit is very close to zero in this interval which could be due to chance and not have meaningful implications.
+Thresholds in the third figure (probabilities .4 to 1) are not clinically relevant as the net benefit is very close to zero in this interval which could be due to chance and not have meaningful implications.
 
 # c)
 ```{r}
@@ -371,11 +371,11 @@ dca(chd69 ~ predicted_risk + predicted_risk_agemodel,
 
 dca(chd69 ~ predicted_risk + predicted_risk_agemodel, 
     data = di, 
-    thresholds = seq(0.35, 0.8, by = 0.01)) %>%
+    thresholds = seq(0.35, 1, by = 0.01)) %>%
   plot(smooth = TRUE)+
   ggtitle("Net benefits plot, models comparison, tresholds 0.35-0.80") + 
   theme_classic() + 
-  coord_cartesian(xlim = c(0.35, 0.8),
+  coord_cartesian(xlim = c(0.35, 1),
                   ylim = c(0,0.082)) +
   scale_x_continuous(expand = c(0, 0))
 ```
@@ -392,7 +392,7 @@ body mass index, smoking behavior, indicator of corneal arcus, dichotomous behav
 and is beneficial for a wider range of thresholds. 
 
 7
-The produeced model does not have statistical significance and would need further calibration to be meaningful. In order to calibrate, one could change the intercept while leaving the factors untouched.
+The produced model does not have statistical significance and would need further calibration to be meaningful. In order to calibrate, one could change the intercept while leaving the factors untouched.
 
 # Citations
 Hu X, Zhuang XD, Mei WY, Liu G, Du ZM, Liao XX, Li Y. Exploring the causal pathway from body mass index to coronary heart disease: a network Mendelian randomization study. Ther Adv Chronic Dis. 2020 May 27;11:2040622320909040. doi: 10.1177/2040622320909040. PMID: 32523662; PMCID: PMC7257848.
