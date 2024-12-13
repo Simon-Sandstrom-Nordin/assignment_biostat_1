@@ -40,8 +40,8 @@ di <- local({
 })
 ```
 
+# 1. Table 1: The original data is d(a subset of wcgs)
 ```{r, warning=FALSE}
-## 1. Table 1: The original data is d(a subset of wcgs)
 CreateTableOne(data=di)
 ```
 
@@ -62,9 +62,11 @@ These were chosen jointly since they "serve as causal mediators from BMI to CHD"
 c. n = 3154
 
 d. overall risk or rate/ relevance of the disease in our cohort
+
+# 3
+a)
 ```{r, warning=FALSE}
 sum(di$chd69)/nrow(di)
-#3
 # fit a simple logistic model
 model <- glm(chd69 ~ . -id -agegroup, family=binomial, data=di)
 summary(model)
@@ -72,12 +74,21 @@ summary(model)
 model2 <- step(model, scope = c(lower = chd69 ~ 1, upper = chd69 ~ (.-id-agegroup)^2))
 summary(model2)
 model2$aic
+```
+The model was chosen to minimize the AIC.
 
+b)
+Choosing off of minizmizing the AIC we get a model with second order interactions with decile, predicted_risk, and calibration_line.
+
+c)
+```{r, warning=FALSE}
 di$predicted_risk <- predict(model2, data=di, type="response")
 ```
 
+# 4
+
+a, b)
 ```{r, warning=FALSE}
-#4 (b)
 myroc <- roc(chd69 ~ predicted_risk,
              data=di,
              levels=c(control=0, case=1),
@@ -90,8 +101,10 @@ max_index <- which.max(myroc$sensitivities+myroc$specificities)
 myroc$thresholds[max_index]
 myroc$sensitivities[max_index]
 sum(di$chd69 == (di$predicted_risk>myroc$thresholds[max_index]))/nrow(di)
+```
 
-#(c) AUC adjusted for optimism.
+c) AUC adjusted for optimism.
+```{r}
 library(pROC)
 
 original_auc <- auc(myroc)# Original AUC
@@ -141,8 +154,8 @@ The model's performance on the training data is a good representation of its per
 The small difference between the unadjusted and adjusted AUCs 
 highlights the robustness of the logistic regression model.
 
+d)
 ```{r, warning=FALSE}
-#(d)
 # install.packages("‘caret’")
 library(caret)
 library(pROC)
@@ -185,9 +198,8 @@ cv_auc #0.7445533
 ############################################
 ```
 
+# 5. a Calibration Curve
 ```{r}
-#5. a Calibration Curve
-
 library(ggplot2)
 library(dplyr)
 
@@ -197,7 +209,7 @@ di$predicted_risk <- predict(model2, di, type = "response")
 di <- di %>% mutate(decile = ntile(predicted_risk, 10))
 ```
 
-# (a) Modification version
+a) Modification version
 Calibration Curve. To evaluate the performance of the prediction model we have computed the AUC
 from ROC analysis, now please plot the calibration curve and report the slope and the intercept of the
 calibration curve. Use the model you chose before.
@@ -243,7 +255,7 @@ cat("Logistic Calibration Intercept:", logistic_intercept, "\n")
 Through the Hosmer-Lemeshow test(the null hypothesis is the model fits the data well) outcome, we get that p-value is 0.6796 ( >0.05), which indicates we fail to reject the null hypothesis.
 The model shows no significant lack of fit.
 
-# 5.(b)  the method of Hosmer and Lemeshow
+b) the method of Hosmer and Lemeshow
 
 ```{r}
 library(ResourceSelection)
@@ -277,7 +289,7 @@ cat("AUC for Agegroup Model:", auc(agegroup_roc), "\n")
 
 ```
 
-#Q5. c, d
+c, d)
 To compare the discrimination between the model we used before and the only agegroup model with a statistical test,
 we use the DeLong’s test to assess if the difference in AUC between the two models is statistically significant.
  Through the outcome shows below, we found that Z = 8.7945, which indicates that the difference in AUCs is large.
@@ -298,11 +310,8 @@ roc_test <- roc.test(full_model_roc, agegroup_roc, method = "delong")
 print(roc_test)
 
 ```
-
+e)
 ```{r}
-#Q5 e
-
-
 # full model
 plot(full_model_roc, col = "blue", lwd = 2, main = "ROC Curves: Full Model vs Agegroup-Only Model")
 # agegroup-only model
@@ -314,12 +323,11 @@ legend("bottomright",
        lwd = 2,
        cex = 0.8,  # Adjust the text size
        bty = "n") 
+```
 
 
-
-# 
-# a)
-
+# 6. Decision curve analysis a)
+```{r}
 library(dcurves) 
  
 dca(chd69 ~ predicted_risk, 
@@ -338,7 +346,7 @@ dca(chd69 ~ predicted_risk,
     data = di, 
     thresholds = seq(0.35, 1, by = 0.01)) %>%
   plot(smooth = TRUE)+
-  ggtitle("Net benefits plot for selected model, tresholds 0.35-0.80") + 
+  ggtitle("Net benefits plot for selected model, tresholds 0.35-1") + 
   theme_classic() + 
   coord_cartesian(xlim = c(0.35, 1),
                   ylim = c(0,0.082)) +
@@ -354,7 +362,7 @@ b) The model's net benefit curve is above the treat-all net benefit curve. The m
  Threshold probabilities such that the model is clinically beneficial are 0%-26%. For these thresholds, the model's net benefits are positive and greater than the treat-all net benefits. For higher thresholds, the model's net benefits are comparable to zero.\
 Thresholds in the third figure (probabilities .4 to 1) are not clinically relevant as the net benefit is very close to zero in this interval which could be due to chance and not have meaningful implications.
 
-# c)
+c)
 ```{r}
 #agegroup_model <- glm(chd69 ~ agegroup, family = binomial, data = di)
 di$predicted_risk_agemodel <- predict(agegroup_model, data=di, type="response")
@@ -373,7 +381,7 @@ dca(chd69 ~ predicted_risk + predicted_risk_agemodel,
     data = di, 
     thresholds = seq(0.35, 1, by = 0.01)) %>%
   plot(smooth = TRUE)+
-  ggtitle("Net benefits plot, models comparison, tresholds 0.35-0.80") + 
+  ggtitle("Net benefits plot, models comparison, tresholds 1") + 
   theme_classic() + 
   coord_cartesian(xlim = c(0.35, 1),
                   ylim = c(0,0.082)) +
@@ -391,7 +399,7 @@ Compared to it, our selected model (model2, considering age, cholesterol level, 
 body mass index, smoking behavior, indicator of corneal arcus, dichotomous behavior pattern) has higher net benefit values 
 and is beneficial for a wider range of thresholds. 
 
-7
+# 7
 The produced model does not have statistical significance and would need further calibration to be meaningful. In order to calibrate, one could change the intercept while leaving the factors untouched.
 
 # Citations
