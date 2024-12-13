@@ -351,5 +351,9 @@ dca(chd69 ~ predicted_risk + predicted_risk_agemodel,
 
 
 
+#Test our model on other independent datasets from different populations or institutions, through comparing AUC and calibration curves to assess generalizability.
+
+
+
 
 
