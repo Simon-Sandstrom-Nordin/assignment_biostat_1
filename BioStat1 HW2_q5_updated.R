@@ -273,6 +273,35 @@ legend("bottomright",
 
 
 
+# 6) Decision curve analysis
+# 
+# a)
+
+library(dcurves) 
+ 
+dca(chd69 ~ predicted_risk, 
+    data = di, 
+    thresholds = seq(0, 0.35, by = 0.01)) %>%
+  plot(smooth = TRUE) +
+  ggtitle("Net benefits plot for selected model, tresholds 0-0.35") + 
+  theme_classic() + 
+  coord_cartesian(xlim = c(0, 0.35),
+                  ylim = c(0,0.082)) +
+  scale_x_continuous(expand = c(0, 0)) #+ 
+#scale_y_continuous(expand = c(0, 0))
+
+
+dca(chd69 ~ predicted_risk, 
+    data = di, 
+    thresholds = seq(0.35, 0.8, by = 0.01)) %>%
+  plot(smooth = TRUE)+
+  ggtitle("Net benefits plot for selected model, tresholds 0.35-0.80") + 
+  theme_classic() + 
+  coord_cartesian(xlim = c(0.35, 0.8),
+                  ylim = c(0,0.082)) +
+  scale_x_continuous(expand = c(0, 0))  
+
+
 
 
 
